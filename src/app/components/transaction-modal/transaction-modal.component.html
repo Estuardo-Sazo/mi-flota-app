@@ -1,0 +1,30 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <h2 class="text-lg font-bold mb-4">
+      Añadir {{ type === 'income' ? 'Ingreso' : 'Gasto' }}
+      <span *ngIf="vehicleAlias" class="text-sm font-normal text-gray-600">para {{ vehicleAlias }}</span>
+    </h2>
+    
+    <form (ngSubmit)="onSave()" class="space-y-4">
+      <div>
+        <label for="amount" class="block text-sm font-medium text-gray-700">Monto</label>
+        <input type="number" id="amount" name="amount" [(ngModel)]="amount" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+        <input type="text" id="description" name="description" [(ngModel)]="description" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label for="date" class="block text-sm font-medium text-gray-700">Fecha</label>
+        <input type="date" id="date" name="date" [(ngModel)]="date" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-4">
+        <button type="button" (click)="onClose()" class="btn btn-outline">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!amount() || !description()">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>

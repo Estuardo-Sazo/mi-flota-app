@@ -1,0 +1,35 @@
+{
+  "name": "Mi Flota",
+  "short_name": "MiFlota",
+  "description": "Gestión de ingresos y gastos de tus vehículos (Tuk Tuk).",
+  "lang": "es-ES",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#1d4ed8",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icons/android/android-launchericon-72-72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-96-96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-144-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "icons/ios/152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-192-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-512-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Inicio",
+      "url": "/",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Registrar Ingreso/Gasto",
+      "short_name": "Nuevo Mov.",
+      "url": "/?add=transaction",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

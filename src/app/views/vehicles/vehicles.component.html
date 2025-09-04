@@ -1,0 +1,25 @@
+<div class="space-y-4">
+  <div *ngFor="let vehicle of vehicles()" class="card">
+  <div class="flex justify-between items-start">
+      <div class="space-y-0.5">
+        <p class="text-base font-semibold text-gray-800 tracking-tight">{{ vehicle.alias }}</p>
+        <p class="text-[11px] text-gray-500 font-medium uppercase">{{ vehicle.placa }}</p>
+      </div>
+      <div class="flex gap-2">
+        <button (click)="addTransaction(vehicle, 'expense')" class="badge badge-red hover:bg-red-200/70">Gasto</button>
+        <button (click)="addTransaction(vehicle, 'income')" class="badge badge-green hover:bg-green-200/70">Ingreso</button>
+    <button (click)="startEdit(vehicle)" class="badge hover:bg-gray-200" title="Editar">✎</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="vehicles().length === 0" class="card text-center py-10 text-gray-500">
+    <p class="font-medium mb-1">No hay vehículos registrados.</p>
+    <p class="text-xs">Añade tu primer vehículo para empezar.</p>
+  </div>
+</div>
+
+<!-- FAB -->
+<button (click)="openAddVehicleModal()" class="fab" aria-label="Agregar vehículo">
+  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+</button>

@@ -1,0 +1,22 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <h2 class="text-lg font-bold mb-4" *ngIf="!vehicle">Añadir Vehículo</h2>
+    <h2 class="text-lg font-bold mb-4" *ngIf="vehicle">Editar Vehículo</h2>
+
+    <form (ngSubmit)="onPrimaryAction()" class="space-y-4">
+      <div>
+        <label for="alias" class="block text-sm font-medium text-gray-700">Alias del Vehículo</label>
+        <input type="text" id="alias" name="alias" [(ngModel)]="alias" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <div>
+        <label for="placa" class="block text-sm font-medium text-gray-700">Placa</label>
+        <input type="text" id="placa" name="placa" [(ngModel)]="placa" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-4">
+        <button type="button" (click)="onClose()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md font-medium">Cancelar</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md font-medium" [disabled]="!alias().trim() || !placa().trim()">{{ vehicle ? 'Actualizar' : 'Guardar' }}</button>
+      </div>
+    </form>
+  </div>
+</div>
