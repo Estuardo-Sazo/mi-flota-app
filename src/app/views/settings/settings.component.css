@@ -36,3 +36,7 @@ input:checked + .switch-toggle::after { transform:translateX(1.25rem); }
 	.rf-row.actions { flex-direction:row; }
 	.reminder-row .col-title { white-space:normal; line-height:1.15; }
 }
+
+/* Loader pequeño */
+.loader-dot { width:6px; height:6px; border-radius:50%; background:var(--primary-600); animation:bounceLoader .6s infinite alternate; display:inline-block; }
+@keyframes bounceLoader { from { transform:translateY(0); opacity:.6; } to { transform:translateY(-4px); opacity:1; } }

@@ -60,7 +60,15 @@
         <div class="rf-row actions">
           <label class="rf-label">Acciones</label>
           <div class="flex flex-wrap gap-2">
-            <button type="button" class="btn-secondary !h-9" (click)="testNow()">Probar ahora</button>
+            <button type="button" class="btn-secondary !h-9 relative" (click)="testNow()" [disabled]="testingNotification">
+              <span *ngIf="!testingNotification; else testing">Probar ahora</span>
+              <ng-template #testing>
+                <span class="inline-flex items-center gap-1">
+                  <span class="loader-dot"></span>
+                  Enviando
+                </span>
+              </ng-template>
+            </button>
             <button type="button" class="btn-secondary !h-9" (click)="clearReminders()" *ngIf="activeReminders.length">Limpiar</button>
           </div>
         </div>

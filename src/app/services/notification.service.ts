@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { DatabaseService } from './database.service';
 
 interface ScheduledReminder {
   id: string;
@@ -10,8 +11,23 @@ interface ScheduledReminder {
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
+  private db = inject(DatabaseService);
   private reminders: ScheduledReminder[] = [];
   private timers: Record<string, any> = {};
+
+  constructor() {
+    // Rehidratar recordatorios persistidos
+    this.db.open().then(async () => {
+      // Si existe la tabla (v2+)
+      if ((this.db as any).reminders) {
+        const stored = await (this.db as any).reminders.toArray();
+        stored.forEach((r: ScheduledReminder) => {
+          this.reminders.push(r);
+          this.program(r);
+        });
+      }
+    });
+  }
 
   async ensurePermission(): Promise<boolean> {
     if (!('Notification' in window)) return false;
@@ -26,6 +42,8 @@ export class NotificationService {
     const full: ScheduledReminder = { id, ...reminder };
     this.reminders.push(full);
     this.program(full);
+  // Persistir
+  try { (this.db as any).reminders?.put(full); } catch {}
     return id;
   }
 
@@ -33,6 +51,7 @@ export class NotificationService {
     this.reminders = this.reminders.filter(r => r.id !== id);
     const t = this.timers[id];
     if (t) { clearTimeout(t); delete this.timers[id]; }
+  try { (this.db as any).reminders?.delete(id); } catch {}
   }
 
   listReminders() { return [...this.reminders]; }

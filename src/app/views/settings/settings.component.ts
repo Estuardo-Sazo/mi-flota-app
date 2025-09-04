@@ -26,6 +26,7 @@ export class SettingsComponent implements OnInit {
   reminderTitle = 'Registrar movimientos';
   reminderBody = 'No olvides ingresar ingresos o gastos de tus vehículos.';
   activeReminders: { id: string; hour: number; minute: number; title: string }[] = [];
+  testingNotification = false;
 
   currencies = [
     { symbol: '$', name: 'USD' },
@@ -65,7 +66,10 @@ export class SettingsComponent implements OnInit {
   }
 
   async testNow() {
-    await this.notif.testNotification(this.reminderTitle, this.reminderBody);
+  if (this.testingNotification) return;
+  this.testingNotification = true;
+  await this.notif.testNotification(this.reminderTitle, this.reminderBody);
+  setTimeout(() => this.testingNotification = false, 800);
   }
 
   clearReminders() {
@@ -86,6 +90,10 @@ export class SettingsComponent implements OnInit {
     if (notificationsSetting) this.notificationsEnabled.set(notificationsSetting.value);
 
     this.isInitialized.set(true);
+
+  // cargar recordatorios ya persistidos
+  const existing = this.notif.listReminders();
+  this.activeReminders = existing.map(r => ({ id: r.id, hour: r.hour, minute: r.minute, title: r.title }));
   }
 
   requestNotificationPermission() {
