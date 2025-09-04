@@ -23,7 +23,7 @@
   </section>
 
   <!-- Sección Recordatorios (rediseño) -->
-  <section class="card space-y-4 reminders-card">
+  <section class="card space-y-5 reminders-card">
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div class="min-w-[200px]">
         <h3 class="text-sm font-semibold text-gray-700 tracking-wide flex items-center gap-2">
@@ -39,27 +39,26 @@
       </label>
     </div>
 
-    <div *ngIf="notificationsEnabled(); else reminderHint" class="space-y-4 animate-fade-in-fast">
-      <div class="reminder-form bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-4">
-        <div class="field-group">
-          <label class="field-label">Hora</label>
-          <div class="flex items-center gap-2">
-            <input type="time" [(ngModel)]="reminderTime" class="input w-32" />
-            <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 flex items-center gap-1">
-              <span class="text-xs font-semibold">Programar</span>
-            </button>
+    <div *ngIf="notificationsEnabled(); else reminderHint" class="space-y-5 animate-fade-in-fast">
+      <!-- Formulario simplificado -->
+      <div class="reminder-form-clean">
+        <div class="rf-row">
+          <label class="rf-label">Hora</label>
+          <div class="flex items-center gap-3 w-full max-w-[180px]">
+            <input type="time" [(ngModel)]="reminderTime" class="input w-full" />
+            <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 px-3">Programar</button>
           </div>
         </div>
-        <div class="field-group">
-          <label class="field-label">Título</label>
-          <input [(ngModel)]="reminderTitle" maxlength="40" class="input" />
+        <div class="rf-row">
+          <label class="rf-label">Título</label>
+          <input [(ngModel)]="reminderTitle" maxlength="60" class="input flex-1" />
         </div>
-        <div class="field-group col-span-2 md:col-span-1">
-          <label class="field-label">Mensaje</label>
-          <input [(ngModel)]="reminderBody" maxlength="90" class="input" />
+        <div class="rf-row">
+          <label class="rf-label">Mensaje</label>
+            <textarea [(ngModel)]="reminderBody" maxlength="140" rows="2" class="input flex-1 resize-none"></textarea>
         </div>
-        <div class="field-group flex flex-col gap-2">
-          <label class="field-label">Acciones</label>
+        <div class="rf-row actions">
+          <label class="rf-label">Acciones</label>
           <div class="flex flex-wrap gap-2">
             <button type="button" class="btn-secondary !h-9" (click)="testNow()">Probar ahora</button>
             <button type="button" class="btn-secondary !h-9" (click)="clearReminders()" *ngIf="activeReminders.length">Limpiar</button>
@@ -67,15 +66,21 @@
         </div>
       </div>
 
-      <div *ngIf="activeReminders.length; else noReminders" class="flex flex-wrap gap-2">
-        <div *ngFor="let r of activeReminders" class="reminder-chip group">
-          <span class="time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
-          <span class="title" [title]="r.title">{{ r.title }}</span>
-          <button type="button" aria-label="Eliminar" (click)="removeReminder(r.id)" class="remove-btn">×</button>
+      <!-- Lista de recordatorios -->
+      <div *ngIf="activeReminders.length; else noReminders" class="space-y-2">
+        <div class="reminder-list-header" *ngIf="activeReminders.length">
+          <span class="col-time">Hora</span>
+          <span class="col-title">Título</span>
+          <span class="col-actions">Eliminar</span>
+        </div>
+        <div *ngFor="let r of activeReminders" class="reminder-row">
+          <span class="col-time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
+          <span class="col-title" [title]="r.title">{{ r.title }}</span>
+          <button type="button" class="col-actions delete" (click)="removeReminder(r.id)">✕</button>
         </div>
       </div>
       <ng-template #noReminders>
-        <p class="text-[11px] text-gray-500 flex items-center gap-1"><span>ℹ️</span>No has programado recordatorios todavía.</p>
+        <p class="text-[11px] text-gray-500 flex items-center gap-1"><span>ℹ️</span>No hay recordatorios programados.</p>
       </ng-template>
     </div>
     <ng-template #reminderHint>

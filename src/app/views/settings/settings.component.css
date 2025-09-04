@@ -1,21 +1,38 @@
-/* Rediseño recordatorios */
+/* Recordatorios - nuevo diseño limpio */
 .reminders-card { position: relative; }
 .switch-toggle { width: 2.75rem; height: 1.5rem; background: linear-gradient(#e2e8f0,#cbd5e1); border-radius: 9999px; position: relative; transition:background .25s; box-shadow: inset 0 1px 2px rgba(0,0,0,.15); }
 input:checked + .switch-toggle { background: linear-gradient(90deg,#2563eb,#3b82f6); }
 .switch-toggle::after { content:""; position:absolute; top:3px; left:3px; width:1.1rem; height:1.1rem; background:#fff; border-radius:50%; box-shadow:0 1px 2px rgba(0,0,0,.25); transition:transform .25s; }
 input:checked + .switch-toggle::after { transform:translateX(1.25rem); }
 
-.reminder-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1rem; }
-.field-group { display:flex; flex-direction:column; gap:.25rem; }
-.field-label { font-size:10px; letter-spacing:.05em; font-weight:600; text-transform:uppercase; color:#64748b; }
+/* Formulario */
+.reminder-form-clean { display:flex; flex-direction:column; gap:1rem; padding:.75rem 1rem 1rem; background:var(--surface-0); border:1px solid var(--border-subtle); border-radius:1rem; }
+.rf-row { display:flex; gap:1.25rem; align-items:flex-start; flex-wrap:wrap; }
+.rf-row.actions { margin-top:.25rem; }
+.rf-label { width:70px; font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-tertiary); padding-top:.55rem; flex-shrink:0; }
 
-.reminder-chip { display:inline-flex; align-items:center; gap:.4rem; background:linear-gradient(90deg,#1d4ed8 0%,#2563eb 60%); color:#fff; font-size:11px; padding:.35rem .6rem .35rem .55rem; border-radius:999px; position:relative; box-shadow:0 2px 4px -1px rgba(0,0,0,.25); }
-.reminder-chip .time { font-weight:600; }
-.reminder-chip .title { max-width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:.9; }
-.reminder-chip .remove-btn { background:rgba(255,255,255,.15); border:none; width:1.05rem; height:1.05rem; line-height:1; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#fff; font-size:.85rem; cursor:pointer; transition:background .2s; }
-.reminder-chip .remove-btn:hover { background:rgba(255,255,255,.3); }
+/* Lista */
+.reminder-list-header { display:grid; grid-template-columns:70px 1fr 60px; font-size:.6rem; text-transform:uppercase; letter-spacing:.5px; font-weight:600; color:var(--text-tertiary); padding:0 .3rem; }
+.reminder-row { display:grid; grid-template-columns:70px 1fr 60px; align-items:center; gap:.75rem; padding:.55rem .6rem; background:var(--surface-0); border:1px solid var(--border-subtle); border-radius:.75rem; font-size:.75rem; position:relative; transition:border-color .25s,background .25s; }
+.reminder-row + .reminder-row { margin-top:.15rem; }
+.reminder-row:hover { border-color:var(--primary-300); }
+.reminder-row .col-time { font-family:var(--font-mono); font-weight:600; letter-spacing:.5px; color:var(--primary-700); font-size:.7rem; }
+.reminder-row .col-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.reminder-row .delete { justify-self:flex-start; width:28px; height:28px; border-radius:8px; border:none; background:var(--surface-1); cursor:pointer; font-size:.8rem; line-height:1; display:flex; align-items:center; justify-content:center; color:var(--text-tertiary); transition:background .25s,color .25s; }
+.reminder-row .delete:hover { background:var(--danger-50); color:var(--danger-700); }
 
 @media (prefers-color-scheme: dark) {
-	.reminder-form { background:rgba(30,41,59,.4); border-color:#334155; }
-	.reminder-chip { background:linear-gradient(90deg,#1e40af,#1d4ed8); }
+	.reminder-form-clean { background:var(--surface-2); border-color:var(--surface-3); }
+	.reminder-row { background:var(--surface-2); border-color:var(--surface-3); }
+	.reminder-row:hover { border-color:var(--primary-600); }
+	.reminder-row .col-time { color:var(--primary-300); }
+}
+
+@media (max-width:520px) {
+	.reminder-list-header { display:none; }
+	.reminder-row { grid-template-columns:60px 1fr 40px; }
+	.rf-label { width:100%; padding-top:0; }
+	.rf-row { flex-direction:column; align-items:stretch; }
+	.rf-row.actions { flex-direction:row; }
+	.reminder-row .col-title { white-space:normal; line-height:1.15; }
 }
