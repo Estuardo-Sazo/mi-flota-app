@@ -1,6 +1,6 @@
 // Archivo corregido: implementación limpia del componente de ajustes
 import { Component, OnInit, signal, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { exportDB, importDB } from 'dexie-export-import';
@@ -9,7 +9,7 @@ import { NotificationService } from '../../services/notification.service';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIf, NgFor],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
@@ -71,6 +71,11 @@ export class SettingsComponent implements OnInit {
   clearReminders() {
     this.activeReminders.forEach(r => this.notif.cancelReminder(r.id));
     this.activeReminders = [];
+  }
+
+  removeReminder(id: string) {
+    this.notif.cancelReminder(id);
+    this.activeReminders = this.activeReminders.filter(r => r.id !== id);
   }
 
   async ngOnInit() {

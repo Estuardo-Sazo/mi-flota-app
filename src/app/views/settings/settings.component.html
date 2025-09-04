@@ -22,41 +22,65 @@
     </div>
   </section>
 
-  <!-- Sección Recordatorios -->
-  <section class="card flex items-center justify-between">
-    <div>
-      <h3 class="text-sm font-semibold text-gray-700 tracking-wide">Recordatorios diarios</h3>
-      <p class="text-[11px] text-gray-500 mt-0.5">Notificación para registrar ingresos o gastos.</p>
-    </div>
-    <label class="relative inline-flex items-center cursor-pointer select-none">
-      <input type="checkbox" class="sr-only peer" [(ngModel)]="notificationsEnabled">
-      <div class="w-11 h-6 rounded-full bg-gray-300 peer-checked:bg-blue-600 transition-colors duration-200 after:content-[''] after:absolute after:w-5 after:h-5 after:bg-white after:rounded-full after:top-0.5 after:left-0.5 after:transition-all peer-checked:after:translate-x-5 shadow-sm"></div>
-    </label>
-    <p class="text-xs text-gray-500">Activa para habilitar recordatorios locales (requiere permiso del navegador).</p>
-    <div class="mt-3 grid gap-3" *ngIf="notificationsEnabled()">
-      <div class="flex flex-wrap items-end gap-2">
-        <div class="flex flex-col">
-          <label class="text-[11px] font-semibold tracking-wide text-gray-500">Hora</label>
-          <input type="time" [(ngModel)]="reminderTime" class="input w-32" />
-        </div>
-        <div class="flex-1 min-w-[160px] flex flex-col">
-          <label class="text-[11px] font-semibold tracking-wide text-gray-500">Título</label>
-          <input [(ngModel)]="reminderTitle" class="input" />
-        </div>
-        <div class="flex-1 min-w-[200px] flex flex-col">
-          <label class="text-[11px] font-semibold tracking-wide text-gray-500">Mensaje</label>
-          <input [(ngModel)]="reminderBody" class="input" />
-        </div>
-        <button type="button" class="btn-primary h-9 mt-5" (click)="scheduleReminder()">Programar</button>
+  <!-- Sección Recordatorios (rediseño) -->
+  <section class="card space-y-4 reminders-card">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="min-w-[200px]">
+        <h3 class="text-sm font-semibold text-gray-700 tracking-wide flex items-center gap-2">
+          <span class="inline-flex w-6 h-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-xs font-bold">⏰</span>
+          Recordatorios diarios
+        </h3>
+        <p class="text-[11px] text-gray-500 mt-1 leading-relaxed">Recibe una notificación a la hora elegida para no olvidar registrar ingresos o gastos.</p>
       </div>
-      <div class="flex gap-2">
-        <button type="button" class="btn-secondary" (click)="testNow()">Probar ahora</button>
-        <button type="button" class="btn-secondary" (click)="clearReminders()" *ngIf="activeReminders.length">Limpiar</button>
-      </div>
-      <ul class="text-xs text-gray-600 space-y-1" *ngIf="activeReminders.length">
-        <li *ngFor="let r of activeReminders">⏰ {{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }} - {{ r.title }}</li>
-      </ul>
+      <label class="relative inline-flex items-center cursor-pointer select-none mt-1">
+        <input type="checkbox" class="sr-only peer" [ngModel]="notificationsEnabled()" (ngModelChange)="notificationsEnabled.set($event)">
+        <div class="switch-toggle"></div>
+        <span class="ml-2 text-xs font-medium text-gray-600" [class.text-blue-600]="notificationsEnabled()">{{ notificationsEnabled() ? 'Activado' : 'Desactivado' }}</span>
+      </label>
     </div>
+
+    <div *ngIf="notificationsEnabled(); else reminderHint" class="space-y-4 animate-fade-in-fast">
+      <div class="reminder-form bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-4">
+        <div class="field-group">
+          <label class="field-label">Hora</label>
+          <div class="flex items-center gap-2">
+            <input type="time" [(ngModel)]="reminderTime" class="input w-32" />
+            <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 flex items-center gap-1">
+              <span class="text-xs font-semibold">Programar</span>
+            </button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Título</label>
+          <input [(ngModel)]="reminderTitle" maxlength="40" class="input" />
+        </div>
+        <div class="field-group col-span-2 md:col-span-1">
+          <label class="field-label">Mensaje</label>
+          <input [(ngModel)]="reminderBody" maxlength="90" class="input" />
+        </div>
+        <div class="field-group flex flex-col gap-2">
+          <label class="field-label">Acciones</label>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn-secondary !h-9" (click)="testNow()">Probar ahora</button>
+            <button type="button" class="btn-secondary !h-9" (click)="clearReminders()" *ngIf="activeReminders.length">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeReminders.length; else noReminders" class="flex flex-wrap gap-2">
+        <div *ngFor="let r of activeReminders" class="reminder-chip group">
+          <span class="time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
+          <span class="title" [title]="r.title">{{ r.title }}</span>
+          <button type="button" aria-label="Eliminar" (click)="removeReminder(r.id)" class="remove-btn">×</button>
+        </div>
+      </div>
+      <ng-template #noReminders>
+        <p class="text-[11px] text-gray-500 flex items-center gap-1"><span>ℹ️</span>No has programado recordatorios todavía.</p>
+      </ng-template>
+    </div>
+    <ng-template #reminderHint>
+      <p class="text-[11px] text-gray-500">Activa el interruptor para configurar un recordatorio diario.</p>
+    </ng-template>
   </section>
 
   <!-- Mantenimiento -->
