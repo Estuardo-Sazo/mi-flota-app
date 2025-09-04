@@ -54,7 +54,7 @@ export class DatabaseService extends Dexie {
       reminders: 'id'
     });
     this.on('populate', () => {
-      this.settings.add({ key: 'currencySymbol', value: '$' });
+      this.settings.add({ key: 'currencySymbol', value: 'Q' });
       this.settings.add({ key: 'notificationsEnabled', value: false });
     });
   }
