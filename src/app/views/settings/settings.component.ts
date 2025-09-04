@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { exportDB, importDB } from 'dexie-export-import';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-settings',
@@ -14,10 +15,17 @@ import { exportDB, importDB } from 'dexie-export-import';
 })
 export class SettingsComponent implements OnInit {
   private db = inject(DatabaseService);
+  private notif = inject(NotificationService);
 
   currencySymbol = signal('$');
   notificationsEnabled = signal(false);
   isInitialized = signal(false);
+
+  // Campos recordatorio
+  reminderTime = '09:00';
+  reminderTitle = 'Registrar movimientos';
+  reminderBody = 'No olvides ingresar ingresos o gastos de tus vehículos.';
+  activeReminders: { id: string; hour: number; minute: number; title: string }[] = [];
 
   currencies = [
     { symbol: '$', name: 'USD' },
@@ -43,6 +51,26 @@ export class SettingsComponent implements OnInit {
         }
       }
     });
+  }
+
+  async scheduleReminder() {
+    if (!this.notificationsEnabled()) {
+      alert('Activa las notificaciones primero.');
+      return;
+    }
+    const [hStr, mStr] = this.reminderTime.split(':');
+    const hour = parseInt(hStr, 10); const minute = parseInt(mStr, 10);
+    const id = this.notif.scheduleDailyReminder({ hour, minute, title: this.reminderTitle, body: this.reminderBody });
+    this.activeReminders.push({ id, hour, minute, title: this.reminderTitle });
+  }
+
+  async testNow() {
+    await this.notif.testNotification(this.reminderTitle, this.reminderBody);
+  }
+
+  clearReminders() {
+    this.activeReminders.forEach(r => this.notif.cancelReminder(r.id));
+    this.activeReminders = [];
   }
 
   async ngOnInit() {
