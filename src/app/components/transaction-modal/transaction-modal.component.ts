@@ -27,7 +27,8 @@ export class TransactionModalComponent {
 
   amount = signal<number | null>(null);
   description = signal('');
-  date = signal(new Date().toISOString().split('T')[0]);
+  // Usar fecha local (no UTC) para evitar desfase - se formatea con date-fns en zona local
+  date = signal(format(new Date(), 'yyyy-MM-dd'));
 
   onSave() {
     if (this.vehicleId && this.type && this.amount() !== null && this.description()) {
@@ -50,6 +51,6 @@ export class TransactionModalComponent {
   private resetForm() {
     this.amount.set(null);
     this.description.set('');
-    this.date.set(new Date().toISOString().split('T')[0]);
+  this.date.set(format(new Date(), 'yyyy-MM-dd'));
   }
 }

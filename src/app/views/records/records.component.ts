@@ -31,7 +31,7 @@ export class RecordsComponent implements OnInit {
         ...tx,
         vehicleAlias: vehicleMap.get(tx.vehicleId) || 'Vehículo desconocido'
       }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => this.dateKey(b.date) - this.dateKey(a.date));
   });
 
   ngOnInit() {
@@ -48,8 +48,14 @@ export class RecordsComponent implements OnInit {
     });
   }
 
+  private dateKey(date: string) { // yyyy-MM-dd
+    const [y, m, d] = date.split('-').map(Number);
+    return y * 10000 + m * 100 + d;
+  }
+
   formatDate(date: string) {
-    return new Date(date).toLocaleDateString('es-ES');
+    const [y, m, d] = date.split('-');
+    return `${parseInt(d,10)}/${parseInt(m,10)}/${y}`;
   }
 
   askDelete(id?: number) {
