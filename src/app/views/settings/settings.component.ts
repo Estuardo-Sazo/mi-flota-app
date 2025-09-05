@@ -4,6 +4,7 @@ import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { exportDB, importDB } from 'dexie-export-import';
+import Dexie from 'dexie';
 import { NotificationService } from '../../services/notification.service';
 
 @Component({
@@ -125,16 +126,22 @@ export class SettingsComponent implements OnInit {
     input.onchange = async (ev) => {
       const file = (ev.target as HTMLInputElement).files?.[0];
       if (!file) return;
-      if (!confirm('¿Sobrescribir datos actuales con el archivo seleccionado?')) return;
+      if (!confirm('¿Sobrescribir todos los datos actuales con el respaldo?')) return;
       try {
-        await this.db.delete();
-        await this.db.open();
+        // Cerrar conexiones abiertas
+        this.db.close();
+        // Borrar DB existente para evitar conflictos de versiones/tablas
+        await Dexie.delete(this.db.name);
+        // Importar (crea la DB con el nombre embebido en el archivo)
         await importDB(file);
-        alert('Importación finalizada. Se recargará la app.');
+        // Reabrir nuestra instancia (aplicará migraciones a v2 si el backup era v1)
+        await this.db.open();
+        alert('Importación completada. Se recargará la aplicación.');
         window.location.reload();
-      } catch (e) {
-        console.error('Error al importar la base de datos:', e);
-        alert('Ocurrió un error al importar la base de datos.');
+      } catch (e: any) {
+        console.error('Error al importar respaldo:', e);
+        alert('Fallo al importar. Detalle: ' + (e?.message || e));
+        try { await this.db.open(); } catch {}
       }
     };
     input.click();
