@@ -82,3 +82,16 @@ input[type='text'], input[type='number'], select { @apply w-full rounded-xl bord
 
 /* Ocultar focus feo en botones icono */
 button:focus { outline: none; }
+
+/* Safe area top para iOS notch: evita que el encabezado quede parcialmente oculto */
+/* Header + main con offset dinámico */
+.app-header-inner { padding-top: calc(env(safe-area-inset-top, 0px) + 0.85rem); padding-bottom: .65rem; }
+.main-content { padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+@supports not (padding: max(0px)) {
+	.app-header-inner { padding-top: .85rem; }
+	.main-content { padding-top: 64px; }
+}
+/* Evitar que el título salte si el viewport cambia al mostrar teclado */
+@media (orientation: portrait) {
+	.app-header { min-height: calc(env(safe-area-inset-top,0px) + 56px); }
+}
