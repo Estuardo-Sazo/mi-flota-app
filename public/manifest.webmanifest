@@ -3,8 +3,8 @@
   "short_name": "MiFlota",
   "description": "Gestión de ingresos y gastos de tus vehículos (Tuk Tuk).",
   "lang": "es-ES",
-  "start_url": "./",
-  "scope": ".",
+  "start_url": "/mi-flota-app/",
+  "scope": "/mi-flota-app/",
   "display": "standalone",
   "background_color": "#f5f7fb",
   "theme_color": "#1d4ed8",
@@ -22,13 +22,13 @@
     {
       "name": "Dashboard",
       "short_name": "Inicio",
-      "url": "/",
+      "url": "/mi-flota-app/",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Registrar Ingreso/Gasto",
       "short_name": "Nuevo Mov.",
-      "url": "/?add=transaction",
+      "url": "/mi-flota-app/?add=transaction",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

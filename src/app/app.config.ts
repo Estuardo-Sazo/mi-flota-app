@@ -1,9 +1,8 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, isDevMode, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideServiceWorker } from '@angular/service-worker';
 
-// Angular 20 con builder moderno expone import.meta.env?.PROD si se define al construir.
-// Fallback a comprobar process.env.NODE_ENV por si se ejecuta en herramientas externas.
-const isProd = (import.meta as any).env?.PROD === true;
+// Habilitar SW basado en modo Angular (más confiable que import.meta.env)
+const isProd = !isDevMode();
 
 export const appConfig: ApplicationConfig = {
   providers: [

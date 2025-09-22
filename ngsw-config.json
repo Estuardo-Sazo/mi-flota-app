@@ -30,5 +30,29 @@
       }
     }
   ],
-  "dataGroups": []
+  "dataGroups": [
+    {
+      "name": "google-fonts-styles",
+      "urls": [
+        "https://fonts.googleapis.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 20,
+        "maxAge": "7d",
+        "timeout": "3s"
+      }
+    },
+    {
+      "name": "google-fonts-webfonts",
+      "urls": [
+        "https://fonts.gstatic.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 30,
+        "maxAge": "30d"
+      }
+    }
+  ]
 }
