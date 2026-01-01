@@ -1,19 +1,39 @@
 <div class="space-y-5">
   <!-- Selector Mes -->
   <div class="flex items-center justify-between px-1">
-    <button class="badge hover:bg-gray-200" (click)="prevMonth()" aria-label="Mes anterior">◀</button>
-    <span class="text-sm font-semibold tracking-wide text-gray-700 select-none">{{ monthLabel() | titlecase }}</span>
-    <button class="badge hover:bg-gray-200" (click)="nextMonth()" [disabled]="isCurrentMonth()" aria-label="Mes siguiente">▶</button>
+    <button class="badge hover:bg-gray-200" (click)="prevMonth()" aria-label="Mes anterior">
+      ◀
+    </button>
+    <span class="text-sm font-semibold tracking-wide text-gray-700 select-none">{{
+      monthLabel() | titlecase
+    }}</span>
+    <button
+      class="badge hover:bg-gray-200"
+      (click)="nextMonth()"
+      [disabled]="isCurrentMonth()"
+      aria-label="Mes siguiente"
+    >
+      ▶
+    </button>
   </div>
   <!-- Métrica principal -->
   <div class="card relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-blue-100 opacity-70 pointer-events-none"></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-blue-100 opacity-70 pointer-events-none"
+    ></div>
     <div class="relative">
       <div class="flex items-center justify-between mb-2">
         <h2 class="title-sm">Ganancia Neta (Mes)</h2>
-        <span class="badge" [class.badge-green]="netEarnings() >= 0" [class.badge-red]="netEarnings() < 0">{{ netEarnings() >= 0 ? 'Positivo' : 'Negativo' }}</span>
+        <span
+          class="badge"
+          [class.badge-green]="netEarnings() >= 0"
+          [class.badge-red]="netEarnings() < 0"
+          >{{ netEarnings() >= 0 ? 'Positivo' : 'Negativo' }}</span
+        >
       </div>
-      <p class="text-4xl font-extrabold tracking-tight text-gray-900">{{ currencySymbol() }}{{ netEarnings().toFixed(2) }}</p>
+      <p class="text-4xl font-extrabold tracking-tight text-gray-900">
+        {{ currencySymbol() }}{{ netEarnings() | number : '1.2-2' }}
+      </p>
       <p class="mt-1 text-xs text-gray-500">Resumen de ingresos y gastos del mes actual.</p>
     </div>
   </div>
@@ -22,11 +42,47 @@
   <div class="grid grid-cols-2 gap-4">
     <div class="card p-4 bg-green-50/60 border-green-100">
       <h3 class="text-xs font-semibold text-green-700 uppercase tracking-wide">Ingresos</h3>
-      <p class="mt-1 text-2xl font-bold text-green-700">{{ currencySymbol() }}{{ monthlyIncome().toFixed(2) }}</p>
+      <p class="mt-1 text-2xl font-bold text-green-700">
+        {{ currencySymbol() }}{{ monthlyIncome() | number : '1.2-2' }}
+      </p>
     </div>
     <div class="card p-4 bg-red-50/60 border-red-100">
       <h3 class="text-xs font-semibold text-red-700 uppercase tracking-wide">Gastos</h3>
-      <p class="mt-1 text-2xl font-bold text-red-700">{{ currencySymbol() }}{{ monthlyExpenses().toFixed(2) }}</p>
+      <p class="mt-1 text-2xl font-bold text-red-700">
+        {{ currencySymbol() }}{{ monthlyExpenses() | number : '1.2-2' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Resumen Diario -->
+  <div class="space-y-3">
+    <h3 class="text-sm font-semibold text-gray-700">Resumen Diario</h3>
+    <div class="space-y-2">
+      <div *ngFor="let day of dailySummaries()" class="card py-3 px-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-gray-800">{{
+            formatDate(day.date.toISOString())
+          }}</span>
+          <span
+            class="text-sm font-bold"
+            [class.text-green-600]="day.balance >= 0"
+            [class.text-red-600]="day.balance < 0"
+          >
+            {{ day.balance >= 0 ? '+' : '' }}{{ currencySymbol()
+            }}{{ day.balance | number : '1.2-2' }}
+          </span>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500">
+          <span>Ingresos: {{ currencySymbol() }}{{ day.income | number : '1.2-2' }}</span>
+          <span>Gastos: {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</span>
+        </div>
+      </div>
+      <div
+        *ngIf="dailySummaries().length === 0"
+        class="card text-center py-6 text-gray-500 text-sm"
+      >
+        No hay movimientos este mes.
+      </div>
     </div>
   </div>
 
@@ -37,16 +93,27 @@
       <span class="text-[11px] text-gray-400">Últimos 10</span>
     </div>
     <div class="space-y-2">
-      <div *ngFor="let tx of recentTransactions()" class="card flex items-center justify-between py-3 px-4">
+      <div
+        *ngFor="let tx of recentTransactions()"
+        class="card flex items-center justify-between py-3 px-4"
+      >
         <div>
           <p class="text-sm font-medium text-gray-800">{{ tx.description || 'Sin descripción' }}</p>
           <p class="text-[11px] text-gray-500 tracking-wide">{{ formatDate(tx.date) }}</p>
         </div>
-        <p class="text-sm font-semibold tabular-nums" [class.text-green-600]="tx.type === 'income'" [class.text-red-600]="tx.type === 'expense'">
-          {{ tx.type === 'income' ? '+' : '-' }}{{ currencySymbol() }}{{ tx.amount.toFixed(2) }}
+        <p
+          class="text-sm font-semibold tabular-nums"
+          [class.text-green-600]="tx.type === 'income'"
+          [class.text-red-600]="tx.type === 'expense'"
+        >
+          {{ tx.type === 'income' ? '+' : '-' }}{{ currencySymbol()
+          }}{{ tx.amount | number : '1.2-2' }}
         </p>
       </div>
-      <div *ngIf="recentTransactions().length === 0" class="card text-center py-6 text-gray-500 text-sm">
+      <div
+        *ngIf="recentTransactions().length === 0"
+        class="card text-center py-6 text-gray-500 text-sm"
+      >
         No hay registros recientes.
       </div>
     </div>

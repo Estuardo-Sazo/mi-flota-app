@@ -11,7 +11,7 @@ import { es } from 'date-fns/locale';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent implements OnInit {
   private db = inject(DatabaseService);
@@ -24,21 +24,21 @@ export class DashboardComponent implements OnInit {
     const month = this.selectedMonth();
     const start = startOfMonth(month);
     const end = endOfMonth(month);
-    return this.transactions().filter(t => {
+    return this.transactions().filter((t) => {
       const tDate = new Date(t.date);
       return tDate >= start && tDate <= end;
     });
   });
 
-  monthlyIncome = computed(() => 
+  monthlyIncome = computed(() =>
     this.currentMonthTransactions()
-      .filter(t => t.type === 'income')
+      .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0)
   );
 
   monthlyExpenses = computed(() =>
     this.currentMonthTransactions()
-      .filter(t => t.type === 'expense')
+      .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0)
   );
 
@@ -50,11 +50,38 @@ export class DashboardComponent implements OnInit {
       .slice(0, 10)
   );
 
+  dailySummaries = computed(() => {
+    const dailyMap = new Map<
+      string,
+      { date: Date; income: number; expense: number; balance: number }
+    >();
+
+    this.currentMonthTransactions().forEach((t) => {
+      const dateObj = new Date(t.date);
+      const dayKey = format(dateObj, 'yyyy-MM-dd'); // Group by day
+
+      if (!dailyMap.has(dayKey)) {
+        dailyMap.set(dayKey, { date: dateObj, income: 0, expense: 0, balance: 0 });
+      }
+
+      const summary = dailyMap.get(dayKey)!;
+      if (t.type === 'income') {
+        summary.income += t.amount;
+        summary.balance += t.amount;
+      } else {
+        summary.expense += t.amount;
+        summary.balance -= t.amount;
+      }
+    });
+
+    return Array.from(dailyMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+  });
+
   ngOnInit() {
-    liveQuery(() => this.db.transactions.toArray()).subscribe(transactions => {
+    liveQuery(() => this.db.transactions.toArray()).subscribe((transactions) => {
       this.transactions.set(transactions);
     });
-    liveQuery(() => this.db.settings.get('currencySymbol')).subscribe(setting => {
+    liveQuery(() => this.db.settings.get('currencySymbol')).subscribe((setting) => {
       if (setting) {
         this.currencySymbol.set(setting.value);
       }

@@ -1,40 +1,58 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <title>MiFlotaApp</title>
-  <base href="/mi-flota-app/">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <!-- Evitar zoom automático al enfocar inputs en iOS: usar font-size >=16px globalmente -->
-  <style>
-    /* Asegura tamaño de fuente mínimo para que iOS no haga zoom al enfocar */
-    html { font-size: 16px; }
-    input, textarea, select { font-size: 1rem; }
-    /* Ajuste de safe areas para PWA fullscreen en iOS */
-    body { padding-bottom: env(safe-area-inset-bottom); }
-    /* Workaround reflujo al aparecer teclado: evitar 100vh fijo, usar min-height */
-    .app-viewport-fix { min-height: 100dvh; display: flex; flex-direction: column; }
-  </style>
-  <!-- PWA iOS enhancement -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <!-- Opciones: default | black | black-translucent -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <!-- Tema adaptativo para navegadores modernos (incluye iOS 15+ standalone) -->
-  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1d4ed8">
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" sizes="152x152" href="icons/ios/152.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/ios/180.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icons/ios/192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icons/ios/512.png">
-  <!-- theme-color sin media (fallback) -->
-  <meta name="theme-color" content="#1d4ed8">
-</head>
-<body class="bg-gray-50">
-  <app-root></app-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>MiFlotaApp</title>
+    <base href="./" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <!-- Evitar zoom automático al enfocar inputs en iOS: usar font-size >=16px globalmente -->
+    <style>
+      /* Asegura tamaño de fuente mínimo para que iOS no haga zoom al enfocar */
+      html {
+        font-size: 16px;
+      }
+      input,
+      textarea,
+      select {
+        font-size: 1rem;
+      }
+      /* Ajuste de safe areas para PWA fullscreen en iOS */
+      body {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      /* Workaround reflujo al aparecer teclado: evitar 100vh fijo, usar min-height */
+      .app-viewport-fix {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+    <!-- PWA iOS enhancement -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Opciones: default | black | black-translucent -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Tema adaptativo para navegadores modernos (incluye iOS 15+ standalone) -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1d4ed8" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/ios/152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/ios/180.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/ios/192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icons/ios/512.png" />
+    <!-- theme-color sin media (fallback) -->
+    <meta name="theme-color" content="#1d4ed8" />
+  </head>
+  <body class="bg-gray-50">
+    <app-root></app-root>
+  </body>
 </html>

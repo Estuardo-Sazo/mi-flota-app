@@ -1,0 +1,92 @@
+<div class="space-y-4">
+  <!-- Date Filters -->
+  <div class="card p-3 bg-white">
+    <div class="flex gap-2 items-end">
+      <div class="flex-1">
+        <label for="startDate" class="block text-xs font-medium text-gray-500 mb-1">Desde</label>
+        <input
+          type="date"
+          id="startDate"
+          [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event)"
+          class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+      <div class="flex-1">
+        <label for="endDate" class="block text-xs font-medium text-gray-500 mb-1">Hasta</label>
+        <input
+          type="date"
+          id="endDate"
+          [ngModel]="endDate()"
+          (ngModelChange)="endDate.set($event)"
+          class="w-full text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Range Summary -->
+  <div class="card relative overflow-hidden">
+    <div
+      class="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 opacity-70 pointer-events-none"
+    ></div>
+    <div class="relative p-4 text-center">
+      <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+        Balance del Periodo
+      </h2>
+      <p
+        class="text-3xl font-extrabold mt-2 text-gray-900"
+        [class.text-green-600]="rangeSummary().balance >= 0"
+        [class.text-red-600]="rangeSummary().balance < 0"
+      >
+        {{ currencySymbol() }}{{ rangeSummary().balance | number : '1.2-2' }}
+      </p>
+      <div class="flex justify-center gap-6 mt-4">
+        <div class="text-center">
+          <span class="block text-xs font-medium text-green-700 uppercase">Ingresos</span>
+          <span class="font-bold text-green-700"
+            >{{ currencySymbol() }}{{ rangeSummary().income | number : '1.2-2' }}</span
+          >
+        </div>
+        <div class="text-center">
+          <span class="block text-xs font-medium text-red-700 uppercase">Gastos</span>
+          <span class="font-bold text-red-700"
+            >{{ currencySymbol() }}{{ rangeSummary().expense | number : '1.2-2' }}</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily List -->
+  <div class="space-y-3">
+    <h3 class="text-sm font-semibold text-gray-700">Desglose Diario</h3>
+    <div class="space-y-2">
+      <div *ngFor="let day of dailyBreakdown()" class="card py-3 px-4">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-gray-800 capitalize">{{
+            formatDate(day.date.toISOString())
+          }}</span>
+          <span
+            class="text-sm font-bold"
+            [class.text-green-600]="day.balance >= 0"
+            [class.text-red-600]="day.balance < 0"
+          >
+            {{ day.balance >= 0 ? '+' : '' }}{{ currencySymbol()
+            }}{{ day.balance | number : '1.2-2' }}
+          </span>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 px-1">
+          <span>Ing: {{ currencySymbol() }}{{ day.income | number : '1.2-2' }}</span>
+          <span>Gas: {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</span>
+        </div>
+      </div>
+      <div
+        *ngIf="dailyBreakdown().length === 0"
+        class="card text-center py-8 text-gray-400 text-sm italic"
+      >
+        No hay registros en este rango de fechas.
+      </div>
+    </div>
+  </div>
+</div>

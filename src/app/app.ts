@@ -4,26 +4,30 @@ import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './views/dashboard/dashboard.component';
 import { VehiclesComponent } from './views/vehicles/vehicles.component';
 import { RecordsComponent } from './views/records/records.component';
+import { ReportsComponent } from './views/reports/reports.component';
 import { SettingsComponent } from './views/settings/settings.component';
-import { TransactionModalComponent, TransactionData } from './components/transaction-modal/transaction-modal.component';
-import { DatabaseService } from './services/database.service';
+import {
+  TransactionModalComponent,
+  TransactionData,
+} from './components/transaction-modal/transaction-modal.component';
+import { DatabaseService, Vehicle } from './services/database.service';
 import { AddVehicleModalComponent } from './components/add-vehicle-modal/add-vehicle-modal.component';
-import { Vehicle } from './services/database.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, 
-    DashboardComponent, 
-    VehiclesComponent, 
-    RecordsComponent, 
-    SettingsComponent, 
+    CommonModule,
+    DashboardComponent,
+    VehiclesComponent,
+    RecordsComponent,
+    SettingsComponent,
     TransactionModalComponent,
-    AddVehicleModalComponent
+    AddVehicleModalComponent,
+    ReportsComponent,
   ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App {
   private db = inject(DatabaseService);
@@ -44,7 +48,7 @@ export class App {
   constructor() {
     // Escuchar actualizaciones si el service worker está habilitado
     if (this.swUpdate?.isEnabled) {
-      this.swUpdate.versionUpdates.subscribe(evt => {
+      this.swUpdate.versionUpdates.subscribe((evt) => {
         if (evt.type === 'VERSION_READY') {
           if (!this.dismissedThisSession) {
             this.updateAvailable.set(true);
@@ -82,17 +86,21 @@ export class App {
     this.isAddVehicleModalOpen.set(false);
   }
 
-  async saveVehicle(vehicleData: { alias: string, placa: string }) {
+  async saveVehicle(vehicleData: { alias: string; placa: string }) {
     await this.db.vehicles.add(vehicleData);
     this.closeAddVehicleModal();
   }
 
-  async updateVehicle(data: { id: number, alias: string, placa: string }) {
+  async updateVehicle(data: { id: number; alias: string; placa: string }) {
     await this.db.vehicles.update(data.id, { alias: data.alias, placa: data.placa });
     this.closeAddVehicleModal();
   }
 
-  async openTransactionModal(event: { vehicleId: number, type: 'income' | 'expense', vehicleAlias: string }) {
+  async openTransactionModal(event: {
+    vehicleId: number;
+    type: 'income' | 'expense';
+    vehicleAlias: string;
+  }) {
     this.modalVehicleId.set(event.vehicleId);
     this.modalTransactionType.set(event.type);
     this.modalVehicleAlias.set(event.vehicleAlias);

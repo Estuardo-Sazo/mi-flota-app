@@ -7,8 +7,18 @@
           <p class="font-semibold text-sm">Nueva versión disponible</p>
           <p class="text-xs opacity-90">Actualiza para obtener mejoras y correcciones.</p>
         </div>
-        <button (click)="reloadApp()" class="text-xs bg-white/15 hover:bg-white/25 transition-colors rounded-md px-3 py-1 font-medium">Actualizar</button>
-        <button (click)="dismissUpdate()" class="text-xs text-white/70 hover:text-white transition-colors font-medium px-1">×</button>
+        <button
+          (click)="reloadApp()"
+          class="text-xs bg-white/15 hover:bg-white/25 transition-colors rounded-md px-3 py-1 font-medium"
+        >
+          Actualizar
+        </button>
+        <button
+          (click)="dismissUpdate()"
+          class="text-xs text-white/70 hover:text-white transition-colors font-medium px-1"
+        >
+          ×
+        </button>
       </div>
     </div>
   </div>
@@ -19,6 +29,7 @@
         {{ currentView() === 'dashboard' ? 'Dashboard' : '' }}
         {{ currentView() === 'vehicles' ? 'Mis Vehículos' : '' }}
         {{ currentView() === 'records' ? 'Registros' : '' }}
+        {{ currentView() === 'reports' ? 'Reportes' : '' }}
         {{ currentView() === 'settings' ? 'Ajustes' : '' }}
       </h1>
       <div class="text-xs text-gray-400 font-medium tracking-wide">Mi Flota</div>
@@ -29,11 +40,14 @@
     <div class="max-w-md mx-auto px-5 py-3 space-y-4">
       <div [ngSwitch]="currentView()">
         <app-dashboard *ngSwitchCase="'dashboard'"></app-dashboard>
-        <app-vehicles *ngSwitchCase="'vehicles'"
+        <app-vehicles
+          *ngSwitchCase="'vehicles'"
           (requestTransaction)="openTransactionModal($event)"
           (addVehicle)="openAddVehicleModal()"
-          (editVehicle)="startEditVehicle($event)"></app-vehicles>
+          (editVehicle)="startEditVehicle($event)"
+        ></app-vehicles>
         <app-records *ngSwitchCase="'records'"></app-records>
+        <app-reports *ngSwitchCase="'reports'"></app-reports>
         <app-settings *ngSwitchCase="'settings'"></app-settings>
       </div>
     </div>
@@ -43,37 +57,115 @@
   <div class="bottom-nav-wrapper z-30">
     <nav class="bottom-nav">
       <button (click)="changeView('dashboard')" [class.active]="currentView() === 'dashboard'">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-        <span>Dashboard</span>
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+          />
+        </svg>
+        <span>Inicio</span>
       </button>
       <button (click)="changeView('vehicles')" [class.active]="currentView() === 'vehicles'">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-        <span>Vehículos</span>
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+        <span>Flota</span>
       </button>
       <button (click)="changeView('records')" [class.active]="currentView() === 'records'">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
         <span>Registros</span>
       </button>
+      <button (click)="changeView('reports')" [class.active]="currentView() === 'reports'">
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+        <span>Reportes</span>
+      </button>
       <button (click)="changeView('settings')" [class.active]="currentView() === 'settings'">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+          />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
         <span>Ajustes</span>
       </button>
     </nav>
   </div>
 </div>
 
-<app-transaction-modal 
+<app-transaction-modal
   *ngIf="isTransactionModalOpen()"
   [vehicleId]="modalVehicleId()"
   [type]="modalTransactionType()"
   [vehicleAlias]="modalVehicleAlias()"
   (close)="closeTransactionModal()"
-  (save)="saveTransaction($event)">
+  (save)="saveTransaction($event)"
+>
 </app-transaction-modal>
 
 <!-- Add Vehicle Modal -->
-<app-add-vehicle-modal *ngIf="isAddVehicleModalOpen()"
+<app-add-vehicle-modal
+  *ngIf="isAddVehicleModalOpen()"
   [vehicle]="editingVehicle()"
   (close)="closeAddVehicleModal()"
   (save)="saveVehicle($event)"
-  (update)="updateVehicle($event)"></app-add-vehicle-modal>
+  (update)="updateVehicle($event)"
+></app-add-vehicle-modal>
