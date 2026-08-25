@@ -3,7 +3,8 @@ import {
   Auth,
   User,
   GoogleAuthProvider,
-  linkWithPopup,
+  getRedirectResult,
+  linkWithRedirect,
   onAuthStateChanged,
   signInAnonymously,
   signOut
@@ -28,6 +29,10 @@ export class AuthService {
   readonly photoURL = computed(() => this._user()?.photoURL ?? null);
   readonly email = computed(() => this._user()?.email ?? null);
 
+  /** Resultado de vincular con Google vía redirect, disponible tras volver de accounts.google.com. */
+  private _googleLinkOutcome = signal<LinkGoogleResult | null>(null);
+  readonly googleLinkOutcome = this._googleLinkOutcome.asReadonly();
+
   /** Resuelve cuando llega el primer evento de auth (con o sin usuario), o al agotarse el timeout. */
   private readonly firstAuthEvent: Promise<void>;
 
@@ -45,6 +50,21 @@ export class AuthService {
         signInAnonymously(this.auth).catch((e) => console.error('No se pudo iniciar sesión anónima', e));
       }
     });
+
+    // Recoge el resultado de un linkWithRedirect previo (si volvimos de accounts.google.com).
+    getRedirectResult(this.auth)
+      .then((result) => {
+        if (result) this._googleLinkOutcome.set({ ok: true });
+      })
+      .catch((e: any) => {
+        if (e?.code === 'auth/credential-already-in-use') {
+          this._googleLinkOutcome.set({ ok: false, reason: 'in-use', error: e });
+        } else if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+          this._googleLinkOutcome.set({ ok: false, reason: 'popup-closed', error: e });
+        } else {
+          this._googleLinkOutcome.set({ ok: false, reason: 'other', error: e });
+        }
+      });
   }
 
   /** Espera a que la sesión (anónima o no) esté resuelta, con un timeout de seguridad para no bloquear el arranque offline. */
@@ -55,23 +75,14 @@ export class AuthService {
     ]);
   }
 
-  async linkWithGoogle(): Promise<LinkGoogleResult> {
+  /**
+   * Redirige a accounts.google.com para vincular la cuenta anónima (deja la página).
+   * El resultado llega en `googleLinkOutcome` cuando la app vuelve a cargar.
+   */
+  async linkWithGoogle(): Promise<void> {
     const current = this.auth.currentUser;
-    if (!current) {
-      return { ok: false, reason: 'other', error: new Error('No hay sesión activa') };
-    }
-    try {
-      await linkWithPopup(current, new GoogleAuthProvider());
-      return { ok: true };
-    } catch (e: any) {
-      if (e?.code === 'auth/credential-already-in-use') {
-        return { ok: false, reason: 'in-use', error: e };
-      }
-      if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
-        return { ok: false, reason: 'popup-closed', error: e };
-      }
-      return { ok: false, reason: 'other', error: e };
-    }
+    if (!current) return;
+    await linkWithRedirect(current, new GoogleAuthProvider());
   }
 
   async signOut(): Promise<void> {

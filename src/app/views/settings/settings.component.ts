@@ -88,6 +88,20 @@ export class SettingsComponent {
         }
       }
     });
+
+    // Resultado de vincular con Google, disponible al volver del redirect a accounts.google.com.
+    effect(() => {
+      const outcome = this.auth.googleLinkOutcome();
+      if (!outcome) return;
+      if (outcome.ok || outcome.reason === 'popup-closed') {
+        this.googleLinkState.set('idle');
+      } else if (outcome.reason === 'in-use') {
+        this.googleLinkState.set('in-use');
+      } else {
+        this.googleLinkState.set('error');
+        console.error('Error al vincular con Google', outcome.error);
+      }
+    });
   }
 
   async scheduleReminder() {
@@ -124,17 +138,7 @@ export class SettingsComponent {
 
   async connectGoogle() {
     this.googleLinkState.set('linking');
-    const result = await this.auth.linkWithGoogle();
-    if (result.ok) {
-      this.googleLinkState.set('idle');
-    } else if (result.reason === 'in-use') {
-      this.googleLinkState.set('in-use');
-    } else if (result.reason === 'popup-closed') {
-      this.googleLinkState.set('idle');
-    } else {
-      this.googleLinkState.set('error');
-      console.error('Error al vincular con Google', result.error);
-    }
+    await this.auth.linkWithGoogle();
   }
 
   async signOutAccount() {
