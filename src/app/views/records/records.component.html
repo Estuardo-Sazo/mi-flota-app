@@ -1,47 +1,48 @@
 <div class="space-y-3">
-  <div
-    *ngFor="let tx of enrichedTransactions()"
-    class="card flex justify-between items-center py-3 px-4"
-  >
-    <div class="pr-4">
-      <p class="text-sm font-medium text-gray-800">{{ tx.description || 'Sin descripción' }}</p>
-      <p class="text-[11px] text-gray-500 font-medium tracking-wide">
-        {{ tx.vehicleAlias }} • {{ formatDate(tx.date) }}
-      </p>
+  @for (tx of enrichedTransactions(); track tx.id) {
+    <div class="card flex justify-between items-center py-3 px-4">
+      <div class="pr-4 min-w-0">
+        <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
+        <p class="text-[11px] font-medium tracking-wide text-secondary">
+          {{ tx.vehicleAlias }} • {{ formatDate(tx.date) }}
+        </p>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <p
+          class="text-sm font-semibold tabular-nums"
+          [class.text-success]="tx.type === 'income'"
+          [class.text-danger]="tx.type === 'expense'"
+        >
+          {{ tx.type === 'income' ? '+' : '-' }}{{ currencySymbol()
+          }}{{ tx.amount | number : '1.2-2' }}
+        </p>
+        <button
+          (click)="askDelete(tx.id)"
+          class="text-xs text-danger hover:opacity-75 transition-opacity"
+          title="Eliminar"
+          aria-label="Eliminar registro"
+        >
+          ✕
+        </button>
+      </div>
     </div>
-    <div class="flex items-center gap-3">
-      <p
-        class="text-sm font-semibold tabular-nums"
-        [class.text-green-600]="tx.type === 'income'"
-        [class.text-red-600]="tx.type === 'expense'"
-      >
-        {{ tx.type === 'income' ? '+' : '-' }}{{ currencySymbol()
-        }}{{ tx.amount | number : '1.2-2' }}
-      </p>
-      <button
-        (click)="askDelete(tx.id)"
-        class="text-xs text-red-500 hover:text-red-600"
-        title="Eliminar"
-      >
-        ✕
-      </button>
+  } @empty {
+    <div class="card empty-state">
+      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <p class="text-sm">No hay registros.</p>
     </div>
-  </div>
-  <div
-    *ngIf="enrichedTransactions().length === 0"
-    class="card text-center py-8 text-gray-500 text-sm"
-  >
-    No hay registros.
-  </div>
+  }
 </div>
 
-<!-- Intencional: el siguiente comentario asegura uso del selector app-confirm-dialog para compilador -->
-<app-confirm-dialog
-  *ngIf="deletingId() !== null"
-  title="Eliminar registro"
-  message="¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer."
-  confirmText="Eliminar"
-  cancelText="Cancelar"
-  (confirm)="confirmDelete()"
-  (cancel)="cancelDelete()"
-></app-confirm-dialog>
+@if (deletingId() !== null) {
+  <app-confirm-dialog
+    title="Eliminar registro"
+    message="¿Seguro que deseas eliminar este registro? Esta acción no se puede deshacer."
+    confirmText="Eliminar"
+    cancelText="Cancelar"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()"
+  ></app-confirm-dialog>
+}

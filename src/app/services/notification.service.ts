@@ -1,30 +1,34 @@
-import { Injectable, inject } from '@angular/core';
-import { DatabaseService } from './database.service';
-
-interface ScheduledReminder {
-  id: string;
-  hour: number; // 0-23
-  minute: number; // 0-59
-  title: string;
-  body: string;
-}
+import { Injectable, effect, inject } from '@angular/core';
+import { ReminderService, Reminder } from './reminder.service';
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private db = inject(DatabaseService);
-  private reminders: ScheduledReminder[] = [];
+  private reminderService = inject(ReminderService);
   private timers: Record<string, any> = {};
+  private scheduledIds = new Set<string>();
+
+  readonly reminders = this.reminderService.reminders;
 
   constructor() {
-    // Rehidratar recordatorios persistidos
-    this.db.open().then(async () => {
-      // Si existe la tabla (v2+)
-      if ((this.db as any).reminders) {
-        const stored = await (this.db as any).reminders.toArray();
-        stored.forEach((r: ScheduledReminder) => {
-          this.reminders.push(r);
+    // Reacciona a los reminders sincronizados desde Firestore: programa los nuevos,
+    // cancela el timer local de los que ya no existan (borrados en otro dispositivo, etc.).
+    effect(() => {
+      const current = this.reminderService.reminders();
+      const currentIds = new Set(current.map((r) => r.id));
+
+      for (const id of [...this.scheduledIds]) {
+        if (!currentIds.has(id)) {
+          clearTimeout(this.timers[id]);
+          delete this.timers[id];
+          this.scheduledIds.delete(id);
+        }
+      }
+
+      for (const r of current) {
+        if (!this.scheduledIds.has(r.id)) {
           this.program(r);
-        });
+          this.scheduledIds.add(r.id);
+        }
       }
     });
   }
@@ -37,26 +41,27 @@ export class NotificationService {
     return perm === 'granted';
   }
 
-  scheduleDailyReminder(reminder: Omit<ScheduledReminder, 'id'>): string {
+  scheduleDailyReminder(reminder: Omit<Reminder, 'id'>): string {
     const id = crypto.randomUUID();
-    const full: ScheduledReminder = { id, ...reminder };
-    this.reminders.push(full);
-    this.program(full);
-  // Persistir
-  try { (this.db as any).reminders?.put(full); } catch {}
+    this.reminderService.set({ id, ...reminder }).catch((e) => console.error('No se pudo guardar el recordatorio', e));
     return id;
   }
 
   cancelReminder(id: string) {
-    this.reminders = this.reminders.filter(r => r.id !== id);
     const t = this.timers[id];
-    if (t) { clearTimeout(t); delete this.timers[id]; }
-  try { (this.db as any).reminders?.delete(id); } catch {}
+    if (t) {
+      clearTimeout(t);
+      delete this.timers[id];
+    }
+    this.scheduledIds.delete(id);
+    this.reminderService.remove(id).catch((e) => console.error('No se pudo eliminar el recordatorio', e));
   }
 
-  listReminders() { return [...this.reminders]; }
+  listReminders(): Reminder[] {
+    return this.reminderService.reminders();
+  }
 
-  private program(r: ScheduledReminder) {
+  private program(r: Reminder) {
     const now = new Date();
     const target = new Date();
     target.setHours(r.hour, r.minute, 0, 0);

@@ -1,8 +1,7 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { DatabaseService, Transaction } from '../../services/database.service';
-import { liveQuery } from 'dexie';
+import { TransactionService } from '../../services/transaction.service';
+import { SettingsService } from '../../services/settings.service';
 import { startOfMonth, endOfMonth, format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -13,11 +12,12 @@ import { es } from 'date-fns/locale';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
-export class DashboardComponent implements OnInit {
-  private db = inject(DatabaseService);
+export class DashboardComponent {
+  private transactionService = inject(TransactionService);
+  private settingsService = inject(SettingsService);
 
-  transactions = signal<Transaction[]>([]);
-  currencySymbol = signal('$');
+  transactions = this.transactionService.transactions;
+  currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
   selectedMonth = signal<Date>(startOfMonth(new Date()));
 
   currentMonthTransactions = computed(() => {
@@ -45,7 +45,7 @@ export class DashboardComponent implements OnInit {
   netEarnings = computed(() => this.monthlyIncome() - this.monthlyExpenses());
 
   recentTransactions = computed(() =>
-    this.transactions()
+    [...this.transactions()]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10)
   );
@@ -76,17 +76,6 @@ export class DashboardComponent implements OnInit {
 
     return Array.from(dailyMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
   });
-
-  ngOnInit() {
-    liveQuery(() => this.db.transactions.toArray()).subscribe((transactions) => {
-      this.transactions.set(transactions);
-    });
-    liveQuery(() => this.db.settings.get('currencySymbol')).subscribe((setting) => {
-      if (setting) {
-        this.currencySymbol.set(setting.value);
-      }
-    });
-  }
 
   formatDate(date: string) {
     return new Date(date).toLocaleDateString('es-ES');

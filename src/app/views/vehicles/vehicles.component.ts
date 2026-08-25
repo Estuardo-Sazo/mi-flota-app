@@ -1,40 +1,71 @@
-import { Component, OnInit, signal, inject, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { DatabaseService, Vehicle } from '../../services/database.service';
-import { liveQuery } from 'dexie';
+import { Component, inject, signal } from '@angular/core';
+import { VehicleService, Vehicle } from '../../services/vehicle.service';
+import { TransactionService } from '../../services/transaction.service';
+import {
+  TransactionModalComponent,
+  TransactionData,
+} from '../../components/transaction-modal/transaction-modal.component';
+import { AddVehicleModalComponent } from '../../components/add-vehicle-modal/add-vehicle-modal.component';
 
 @Component({
   selector: 'app-vehicles',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TransactionModalComponent, AddVehicleModalComponent],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.css']
 })
-export class VehiclesComponent implements OnInit {
-  @Output() requestTransaction = new EventEmitter<{ vehicleId: number, type: 'income' | 'expense', vehicleAlias: string }>();
-  @Output() addVehicle = new EventEmitter<void>();
-  @Output() editVehicle = new EventEmitter<Vehicle>();
-  
-  private db = inject(DatabaseService);
-  vehicles = signal<Vehicle[]>([]);
+export class VehiclesComponent {
+  private vehicleService = inject(VehicleService);
+  private transactionService = inject(TransactionService);
 
-  ngOnInit() {
-    liveQuery(() => this.db.vehicles.toArray()).subscribe(vehicles => {
-      this.vehicles.set(vehicles);
-    });
-  }
+  vehicles = this.vehicleService.vehicles;
+
+  isTransactionModalOpen = signal(false);
+  isAddVehicleModalOpen = signal(false);
+  editingVehicle = signal<Vehicle | null>(null);
+  modalVehicleId = signal<string | null>(null);
+  modalTransactionType = signal<'income' | 'expense' | null>(null);
+  modalVehicleAlias = signal<string | null>(null);
 
   addTransaction(vehicle: Vehicle, type: 'income' | 'expense') {
     if (vehicle.id) {
-      this.requestTransaction.emit({ vehicleId: vehicle.id, type, vehicleAlias: vehicle.alias });
+      this.modalVehicleId.set(vehicle.id);
+      this.modalTransactionType.set(type);
+      this.modalVehicleAlias.set(vehicle.alias);
+      this.isTransactionModalOpen.set(true);
     }
   }
 
+  closeTransactionModal() {
+    this.isTransactionModalOpen.set(false);
+  }
+
+  async saveTransaction(transactionData: TransactionData) {
+    await this.transactionService.add(transactionData);
+    this.closeTransactionModal();
+  }
+
   openAddVehicleModal() {
-    this.addVehicle.emit();
+    this.editingVehicle.set(null);
+    this.isAddVehicleModalOpen.set(true);
   }
 
   startEdit(vehicle: Vehicle) {
-    this.editVehicle.emit(vehicle);
+    this.editingVehicle.set(vehicle);
+    this.isAddVehicleModalOpen.set(true);
+  }
+
+  closeAddVehicleModal() {
+    this.isAddVehicleModalOpen.set(false);
+  }
+
+  async saveVehicle(vehicleData: { alias: string; placa: string }) {
+    await this.vehicleService.add(vehicleData);
+    this.closeAddVehicleModal();
+  }
+
+  async updateVehicle(data: { id: string; alias: string; placa: string }) {
+    await this.vehicleService.update(data.id, { alias: data.alias, placa: data.placa });
+    this.closeAddVehicleModal();
   }
 }

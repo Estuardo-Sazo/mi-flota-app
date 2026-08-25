@@ -1,108 +1,183 @@
 <div class="space-y-7">
   <div>
     <h2 class="title-lg">Ajustes</h2>
-    <p class="text-xs text-gray-500 mt-1">Preferencias de visualización y mantenimiento.</p>
+    <p class="text-xs text-secondary mt-1">Preferencias de visualización y mantenimiento.</p>
   </div>
+
+  <!-- Sección Apariencia -->
+  <section class="card space-y-3">
+    <div>
+      <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Apariencia</h3>
+      <p class="text-[11px] text-secondary mt-0.5">Elige cómo se ve la aplicación.</p>
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      @for (opt of themeOptions; track opt.value) {
+        <button
+          type="button"
+          (click)="theme.setPreference(opt.value)"
+          class="rounded-xl py-2 text-xs font-medium transition-colors border"
+          [style.borderColor]="theme.preference() === opt.value ? 'var(--color-primary)' : 'var(--color-border)'"
+          [style.color]="theme.preference() === opt.value ? 'var(--color-primary)' : 'var(--color-text-secondary)'"
+          [style.background]="theme.preference() === opt.value ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'transparent'"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    </div>
+  </section>
 
   <!-- Sección Moneda -->
   <section class="card space-y-3">
     <div class="flex items-start justify-between">
       <div>
-        <h3 class="text-sm font-semibold text-gray-700 tracking-wide">Moneda</h3>
-        <p class="text-[11px] text-gray-500 mt-0.5">Selecciona el símbolo que se mostrará en los montos.</p>
+        <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Moneda</h3>
+        <p class="text-[11px] text-secondary mt-0.5">Selecciona el símbolo que se mostrará en los montos.</p>
       </div>
     </div>
     <div>
       <label for="currency" class="sr-only">Símbolo de Moneda</label>
-      <select id="currency" [(ngModel)]="currencySymbol" class="w-full bg-white/70 backdrop-blur-sm border border-gray-300 rounded-xl py-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-        <option *ngFor="let currency of currencies" [value]="currency.symbol">
-          {{ currency.name }} ({{ currency.symbol }})
-        </option>
+      <select id="currency" [ngModel]="currencySymbol()" (ngModelChange)="currencySymbol.set($event)" class="w-full text-sm">
+        @for (currency of currencies; track currency.symbol) {
+          <option [value]="currency.symbol">
+            {{ currency.name }} ({{ currency.symbol }})
+          </option>
+        }
       </select>
     </div>
   </section>
 
-  <!-- Sección Recordatorios (rediseño) -->
+  <!-- Sección Recordatorios -->
   <section class="card space-y-5 reminders-card">
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div class="min-w-[200px]">
-        <h3 class="text-sm font-semibold text-gray-700 tracking-wide flex items-center gap-2">
-          <span class="inline-flex w-6 h-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-xs font-bold">⏰</span>
+        <h3 class="text-sm font-semibold tracking-wide flex items-center gap-2" style="color: var(--color-text)">
+          <span class="inline-flex w-6 h-6 items-center justify-center rounded-lg text-xs font-bold" style="background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary)">⏰</span>
           Recordatorios diarios
         </h3>
-        <p class="text-[11px] text-gray-500 mt-1 leading-relaxed">Recibe una notificación a la hora elegida para no olvidar registrar ingresos o gastos.</p>
+        <p class="text-[11px] text-secondary mt-1 leading-relaxed">Recibe una notificación a la hora elegida para no olvidar registrar ingresos o gastos.</p>
       </div>
       <label class="relative inline-flex items-center cursor-pointer select-none mt-1">
         <input type="checkbox" class="sr-only peer" [ngModel]="notificationsEnabled()" (ngModelChange)="notificationsEnabled.set($event)">
         <div class="switch-toggle"></div>
-        <span class="ml-2 text-xs font-medium text-gray-600" [class.text-blue-600]="notificationsEnabled()">{{ notificationsEnabled() ? 'Activado' : 'Desactivado' }}</span>
+        <span class="ml-2 text-xs font-medium" [style.color]="notificationsEnabled() ? 'var(--color-primary)' : 'var(--color-text-secondary)'">{{ notificationsEnabled() ? 'Activado' : 'Desactivado' }}</span>
       </label>
     </div>
 
-    <div *ngIf="notificationsEnabled(); else reminderHint" class="space-y-5 animate-fade-in-fast">
-      <!-- Formulario simplificado -->
-      <div class="reminder-form-clean">
-        <div class="rf-row">
-          <label class="rf-label">Hora</label>
-          <div class="flex items-center gap-3 w-full max-w-[180px]">
-            <input type="time" [(ngModel)]="reminderTime" class="input w-full" />
-            <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 px-3">Programar</button>
+    @if (notificationsEnabled()) {
+      <div class="space-y-5 animate-fade-in-fast">
+        <!-- Formulario simplificado -->
+        <div class="reminder-form-clean">
+          <div class="rf-row">
+            <label class="rf-label">Hora</label>
+            <div class="flex items-center gap-3 w-full max-w-[180px]">
+              <input type="time" [(ngModel)]="reminderTime" class="input w-full" />
+              <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 px-3">Programar</button>
+            </div>
+          </div>
+          <div class="rf-row">
+            <label class="rf-label">Título</label>
+            <input [(ngModel)]="reminderTitle" maxlength="60" class="input flex-1" />
+          </div>
+          <div class="rf-row">
+            <label class="rf-label">Mensaje</label>
+              <textarea [(ngModel)]="reminderBody" maxlength="140" rows="2" class="input flex-1 resize-none"></textarea>
+          </div>
+          <div class="rf-row actions">
+            <label class="rf-label">Acciones</label>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" class="btn-secondary !h-9 relative" (click)="testNow()" [disabled]="testingNotification">
+                @if (!testingNotification) {
+                  <span>Probar ahora</span>
+                } @else {
+                  <span class="inline-flex items-center gap-1">
+                    <span class="loader-dot"></span>
+                    Enviando
+                  </span>
+                }
+              </button>
+              @if (activeReminders().length) {
+                <button type="button" class="btn-secondary !h-9" (click)="clearReminders()">Limpiar</button>
+              }
+            </div>
           </div>
         </div>
-        <div class="rf-row">
-          <label class="rf-label">Título</label>
-          <input [(ngModel)]="reminderTitle" maxlength="60" class="input flex-1" />
-        </div>
-        <div class="rf-row">
-          <label class="rf-label">Mensaje</label>
-            <textarea [(ngModel)]="reminderBody" maxlength="140" rows="2" class="input flex-1 resize-none"></textarea>
-        </div>
-        <div class="rf-row actions">
-          <label class="rf-label">Acciones</label>
-          <div class="flex flex-wrap gap-2">
-            <button type="button" class="btn-secondary !h-9 relative" (click)="testNow()" [disabled]="testingNotification">
-              <span *ngIf="!testingNotification; else testing">Probar ahora</span>
-              <ng-template #testing>
-                <span class="inline-flex items-center gap-1">
-                  <span class="loader-dot"></span>
-                  Enviando
-                </span>
-              </ng-template>
-            </button>
-            <button type="button" class="btn-secondary !h-9" (click)="clearReminders()" *ngIf="activeReminders.length">Limpiar</button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Lista de recordatorios -->
-      <div *ngIf="activeReminders.length; else noReminders" class="space-y-2">
-        <div class="reminder-list-header" *ngIf="activeReminders.length">
-          <span class="col-time">Hora</span>
-          <span class="col-title">Título</span>
-          <span class="col-actions">Eliminar</span>
-        </div>
-        <div *ngFor="let r of activeReminders" class="reminder-row">
-          <span class="col-time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
-          <span class="col-title" [title]="r.title">{{ r.title }}</span>
-          <button type="button" class="col-actions delete" (click)="removeReminder(r.id)">✕</button>
-        </div>
+        <!-- Lista de recordatorios -->
+        @if (activeReminders().length) {
+          <div class="space-y-2">
+            <div class="reminder-list-header">
+              <span class="col-time">Hora</span>
+              <span class="col-title">Título</span>
+              <span class="col-actions">Eliminar</span>
+            </div>
+            @for (r of activeReminders(); track r.id) {
+              <div class="reminder-row">
+                <span class="col-time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
+                <span class="col-title" [title]="r.title">{{ r.title }}</span>
+                <button type="button" class="col-actions delete" (click)="removeReminder(r.id)" aria-label="Eliminar recordatorio">✕</button>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-[11px] text-secondary flex items-center gap-1"><span>ℹ️</span>No hay recordatorios programados.</p>
+        }
       </div>
-      <ng-template #noReminders>
-        <p class="text-[11px] text-gray-500 flex items-center gap-1"><span>ℹ️</span>No hay recordatorios programados.</p>
-      </ng-template>
+    } @else {
+      <p class="text-[11px] text-secondary">Activa el interruptor para configurar un recordatorio diario.</p>
+    }
+  </section>
+
+  <!-- Sección Cuenta / Sincronización -->
+  <section class="card space-y-3">
+    <div>
+      <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Cuenta y sincronización</h3>
+      <p class="text-[11px] text-secondary mt-0.5">Tus datos ya se guardan en la nube automáticamente. Conecta Google para acceder desde otro dispositivo con la misma cuenta.</p>
     </div>
-    <ng-template #reminderHint>
-      <p class="text-[11px] text-gray-500">Activa el interruptor para configurar un recordatorio diario.</p>
-    </ng-template>
+
+    @if (auth.isAnonymous()) {
+      <div class="space-y-2">
+        <button
+          type="button"
+          class="btn btn-outline w-full justify-center"
+          [disabled]="googleLinkState() === 'linking'"
+          (click)="connectGoogle()"
+        >
+          {{ googleLinkState() === 'linking' ? 'Conectando…' : 'Conectar con Google' }}
+        </button>
+        @if (googleLinkState() === 'in-use') {
+          <p class="text-[11px]" style="color: var(--color-warning)">
+            Esa cuenta de Google ya tiene datos propios en otro dispositivo. Usa "Exportar" aquí y "Importar" en el otro dispositivo (o viceversa) para fusionar la información manualmente.
+          </p>
+        }
+        @if (googleLinkState() === 'error') {
+          <p class="text-[11px] text-danger">
+            No se pudo conectar con Google. Intenta de nuevo.
+          </p>
+        }
+      </div>
+    } @else {
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          @if (auth.photoURL()) {
+            <img [src]="auth.photoURL()" class="w-8 h-8 rounded-full" alt="" />
+          }
+          <div class="min-w-0">
+            <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ auth.displayName() || auth.email() || 'Cuenta conectada' }}</p>
+            <p class="text-[11px] text-secondary truncate">{{ auth.email() }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary !h-9 shrink-0" (click)="signOutAccount()">Cerrar sesión</button>
+      </div>
+    }
   </section>
 
   <!-- Mantenimiento -->
   <section class="card space-y-3">
-    <h3 class="text-sm font-semibold text-gray-700 tracking-wide">Mantenimiento</h3>
+    <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Mantenimiento</h3>
     <div class="grid grid-cols-1 gap-2">
       <button (click)="exportDb()" class="btn btn-outline w-full justify-center">Exportar Base de Datos</button>
       <button (click)="importDb()" class="btn btn-outline w-full justify-center">Importar Base de Datos</button>
     </div>
-    <p class="text-[11px] text-gray-400">La importación reemplazará todos los datos actuales.</p>
+    <p class="text-[11px] text-muted">La importación reemplazará todos los datos actuales.</p>
   </section>
 </div>

@@ -1,10 +1,9 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { format } from 'date-fns';
 
 export interface TransactionData {
-  vehicleId: number;
+  vehicleId: string;
   type: 'income' | 'expense';
   amount: number;
   description: string;
@@ -14,12 +13,12 @@ export interface TransactionData {
 @Component({
   selector: 'app-transaction-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './transaction-modal.component.html',
   styleUrls: ['./transaction-modal.component.css'],
 })
 export class TransactionModalComponent {
-  @Input() vehicleId: number | null = null;
+  @Input() vehicleId: string | null = null;
   @Input() type: 'income' | 'expense' | null = null;
   @Input() vehicleAlias: string | null = null;
   @Output() close = new EventEmitter<void>();

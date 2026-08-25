@@ -1,12 +1,11 @@
 import { Component, Output, EventEmitter, signal, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Vehicle } from '../../services/database.service';
+import { Vehicle } from '../../services/vehicle.service';
 
 @Component({
   selector: 'app-add-vehicle-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './add-vehicle-modal.component.html',
   styleUrls: ['./add-vehicle-modal.component.css']
 })
@@ -14,7 +13,7 @@ export class AddVehicleModalComponent implements OnChanges {
   @Input() vehicle: Vehicle | null = null; // null -> modo añadir, con valor -> modo edición
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{ alias: string, placa: string }>();
-  @Output() update = new EventEmitter<{ id: number, alias: string, placa: string }>();
+  @Output() update = new EventEmitter<{ id: string, alias: string, placa: string }>();
 
   alias = signal('');
   placa = signal('');

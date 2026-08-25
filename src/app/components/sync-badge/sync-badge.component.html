@@ -1,0 +1,11 @@
+<div
+  class="sync-badge"
+  [class.is-synced]="syncStatus.status() === 'synced'"
+  [class.is-syncing]="syncStatus.status() === 'syncing'"
+  [class.is-offline]="syncStatus.status() === 'offline'"
+  [attr.aria-label]="labels[syncStatus.status()]"
+  role="status"
+>
+  <span class="sync-dot"></span>
+  <span class="sync-label">{{ labels[syncStatus.status()] }}</span>
+</div>

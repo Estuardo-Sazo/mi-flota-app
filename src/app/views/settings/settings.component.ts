@@ -1,32 +1,56 @@
-// Archivo corregido: implementación limpia del componente de ajustes
-import { Component, OnInit, signal, inject, effect } from '@angular/core';
-import { CommonModule, NgIf, NgFor } from '@angular/common';
+import { Component, signal, inject, effect, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatabaseService } from '../../services/database.service';
-import { exportDB, importDB } from 'dexie-export-import';
-import Dexie from 'dexie';
+import {
+  Firestore,
+  collection,
+  doc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  writeBatch
+} from '@angular/fire/firestore';
+import { SettingsService } from '../../services/settings.service';
+import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { ThemeService, ThemePreference } from '../../services/theme.service';
+import { remindersPath, settingsDocPath, transactionsPath, vehiclesPath } from '../../services/firestore-paths';
+import { chunk } from '../../utils/chunk';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIf, NgFor],
+  imports: [FormsModule],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
-export class SettingsComponent implements OnInit {
-  private db = inject(DatabaseService);
+export class SettingsComponent {
+  private firestore = inject(Firestore);
+  private settingsService = inject(SettingsService);
   private notif = inject(NotificationService);
+  auth = inject(AuthService);
+  theme = inject(ThemeService);
+
+  themeOptions: { value: ThemePreference; label: string }[] = [
+    { value: 'system', label: 'Sistema' },
+    { value: 'light', label: 'Claro' },
+    { value: 'dark', label: 'Oscuro' },
+  ];
 
   currencySymbol = signal('$');
   notificationsEnabled = signal(false);
   isInitialized = signal(false);
+  private hasSyncedFromRemote = false;
+
+  // Cuenta / sincronización
+  googleLinkState = signal<'idle' | 'linking' | 'in-use' | 'error'>('idle');
 
   // Campos recordatorio
   reminderTime = '09:00';
   reminderTitle = 'Registrar movimientos';
   reminderBody = 'No olvides ingresar ingresos o gastos de tus vehículos.';
-  activeReminders: { id: string; hour: number; minute: number; title: string }[] = [];
+  activeReminders = computed(() =>
+    this.notif.reminders().map((r) => ({ id: r.id, hour: r.hour, minute: r.minute, title: r.title }))
+  );
   testingNotification = false;
 
   currencies = [
@@ -39,15 +63,26 @@ export class SettingsComponent implements OnInit {
   ];
 
   constructor() {
+    // Carga inicial desde Firestore (una sola vez, para no pisar ediciones locales en curso).
+    effect(() => {
+      const remote = this.settingsService.settings();
+      if (!this.hasSyncedFromRemote) {
+        this.currencySymbol.set(remote.currencySymbol);
+        this.notificationsEnabled.set(remote.notificationsEnabled);
+        this.hasSyncedFromRemote = true;
+        this.isInitialized.set(true);
+      }
+    });
+
     // Persistencia automática cuando cambian los ajustes (evitando guardar durante carga inicial)
     effect(() => {
       if (this.isInitialized()) {
-        this.db.settings.put({ key: 'currencySymbol', value: this.currencySymbol() });
+        this.settingsService.update({ currencySymbol: this.currencySymbol() });
       }
     });
     effect(() => {
       if (this.isInitialized()) {
-        this.db.settings.put({ key: 'notificationsEnabled', value: this.notificationsEnabled() });
+        this.settingsService.update({ notificationsEnabled: this.notificationsEnabled() });
         if (this.notificationsEnabled()) {
           this.requestNotificationPermission();
         }
@@ -61,40 +96,24 @@ export class SettingsComponent implements OnInit {
       return;
     }
     const [hStr, mStr] = this.reminderTime.split(':');
-    const hour = parseInt(hStr, 10); const minute = parseInt(mStr, 10);
-    const id = this.notif.scheduleDailyReminder({ hour, minute, title: this.reminderTitle, body: this.reminderBody });
-    this.activeReminders.push({ id, hour, minute, title: this.reminderTitle });
+    const hour = parseInt(hStr, 10);
+    const minute = parseInt(mStr, 10);
+    this.notif.scheduleDailyReminder({ hour, minute, title: this.reminderTitle, body: this.reminderBody });
   }
 
   async testNow() {
-  if (this.testingNotification) return;
-  this.testingNotification = true;
-  await this.notif.testNotification(this.reminderTitle, this.reminderBody);
-  setTimeout(() => this.testingNotification = false, 800);
+    if (this.testingNotification) return;
+    this.testingNotification = true;
+    await this.notif.testNotification(this.reminderTitle, this.reminderBody);
+    setTimeout(() => (this.testingNotification = false), 800);
   }
 
   clearReminders() {
-    this.activeReminders.forEach(r => this.notif.cancelReminder(r.id));
-    this.activeReminders = [];
+    this.activeReminders().forEach((r) => this.notif.cancelReminder(r.id));
   }
 
   removeReminder(id: string) {
     this.notif.cancelReminder(id);
-    this.activeReminders = this.activeReminders.filter(r => r.id !== id);
-  }
-
-  async ngOnInit() {
-    const currencySetting = await this.db.settings.get('currencySymbol');
-    if (currencySetting) this.currencySymbol.set(currencySetting.value);
-
-    const notificationsSetting = await this.db.settings.get('notificationsEnabled');
-    if (notificationsSetting) this.notificationsEnabled.set(notificationsSetting.value);
-
-    this.isInitialized.set(true);
-
-  // cargar recordatorios ya persistidos
-  const existing = this.notif.listReminders();
-  this.activeReminders = existing.map(r => ({ id: r.id, hour: r.hour, minute: r.minute, title: r.title }));
   }
 
   requestNotificationPermission() {
@@ -103,9 +122,44 @@ export class SettingsComponent implements OnInit {
     }
   }
 
+  async connectGoogle() {
+    this.googleLinkState.set('linking');
+    const result = await this.auth.linkWithGoogle();
+    if (result.ok) {
+      this.googleLinkState.set('idle');
+    } else if (result.reason === 'in-use') {
+      this.googleLinkState.set('in-use');
+    } else if (result.reason === 'popup-closed') {
+      this.googleLinkState.set('idle');
+    } else {
+      this.googleLinkState.set('error');
+      console.error('Error al vincular con Google', result.error);
+    }
+  }
+
+  async signOutAccount() {
+    if (!confirm('¿Cerrar sesión? En este dispositivo perderás acceso a estos datos hasta volver a iniciar sesión con la misma cuenta.')) return;
+    await this.auth.signOut();
+  }
+
   async exportDb() {
+    const uid = this.auth.uid();
+    if (!uid) return;
     try {
-      const blob = await exportDB(this.db);
+      const [vehiclesSnap, transactionsSnap, remindersSnap] = await Promise.all([
+        getDocs(collection(this.firestore, vehiclesPath(uid))),
+        getDocs(collection(this.firestore, transactionsPath(uid))),
+        getDocs(collection(this.firestore, remindersPath(uid)))
+      ]);
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        vehicles: vehiclesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+        transactions: transactionsSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+        reminders: remindersSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+        settings: this.settingsService.settings()
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -127,23 +181,62 @@ export class SettingsComponent implements OnInit {
       const file = (ev.target as HTMLInputElement).files?.[0];
       if (!file) return;
       if (!confirm('¿Sobrescribir todos los datos actuales con el respaldo?')) return;
+      const uid = this.auth.uid();
+      if (!uid) return;
       try {
-        // Cerrar conexiones abiertas
-        this.db.close();
-        // Borrar DB existente para evitar conflictos de versiones/tablas
-        await Dexie.delete(this.db.name);
-        // Importar (crea la DB con el nombre embebido en el archivo)
-        await importDB(file);
-        // Reabrir nuestra instancia (aplicará migraciones a v2 si el backup era v1)
-        await this.db.open();
-        alert('Importación completada. Se recargará la aplicación.');
-        window.location.reload();
+        const data = JSON.parse(await file.text());
+
+        await this.replaceCollection(vehiclesPath(uid), data.vehicles ?? [], (v: any) => ({
+          alias: v.alias,
+          placa: v.placa,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }));
+        await this.replaceCollection(transactionsPath(uid), data.transactions ?? [], (t: any) => ({
+          vehicleId: t.vehicleId,
+          date: t.date,
+          type: t.type,
+          amount: t.amount,
+          description: t.description,
+          createdAt: serverTimestamp()
+        }));
+        await this.replaceCollection(remindersPath(uid), data.reminders ?? [], (r: any) => ({
+          hour: r.hour,
+          minute: r.minute,
+          title: r.title,
+          body: r.body
+        }));
+        if (data.settings) {
+          await setDoc(doc(this.firestore, settingsDocPath(uid)), data.settings, { merge: true });
+        }
+        alert('Importación completada.');
       } catch (e: any) {
         console.error('Error al importar respaldo:', e);
         alert('Fallo al importar. Detalle: ' + (e?.message || e));
-        try { await this.db.open(); } catch {}
       }
     };
     input.click();
+  }
+
+  /** Borra todos los documentos existentes en `path` y los reemplaza por `items`, conservando sus ids originales. */
+  private async replaceCollection(
+    path: string,
+    items: Array<{ id?: string }>,
+    mapData: (item: any) => Record<string, unknown>
+  ) {
+    const existing = await getDocs(collection(this.firestore, path));
+    for (const group of chunk(existing.docs, 450)) {
+      const batch = writeBatch(this.firestore);
+      for (const d of group) batch.delete(d.ref);
+      await batch.commit();
+    }
+    const withId = items.filter((i) => i.id);
+    for (const group of chunk(withId, 450)) {
+      const batch = writeBatch(this.firestore);
+      for (const item of group) {
+        batch.set(doc(this.firestore, `${path}/${item.id}`), mapData(item));
+      }
+      await batch.commit();
+    }
   }
 }

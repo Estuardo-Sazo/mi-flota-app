@@ -1,97 +1,232 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* Paleta y estilos base modernos */
+/* ===== Tokens de diseño ===== */
 :root {
 	--color-bg: #f5f7fb;
 	--color-surface: #ffffff;
-	--color-primary: #1d4ed8; /* azul */
+	--color-surface-alt: #f1f5f9;
+	--color-border: #e2e8f0;
+	--color-text: #1e293b;
+	--color-text-secondary: #64748b;
+	--color-text-muted: #94a3b8;
+
+	--color-primary: #1d4ed8;
 	--color-primary-accent: #3b82f6;
 	--color-danger: #dc2626;
 	--color-success: #059669;
-	--color-border: #e2e8f0;
-	--radius-sm: 6px;
-	--radius-md: 14px;
+	--color-warning: #d97706;
+
+	--radius-sm: 8px;
+	--radius-md: 16px;
+	--radius-lg: 22px;
 	--radius-full: 9999px;
-	--grad-primary: linear-gradient(135deg,#1d4ed8,#3b82f6 60%,#60a5fa);
+
+	--grad-primary: linear-gradient(135deg, #1d4ed8, #3b82f6 60%, #60a5fa);
+	--shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+	--shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+	--shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.14);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not(.light) {
+		--color-bg: #0a1122;
+		--color-surface: #131c2e;
+		--color-surface-alt: #1a2438;
+		--color-border: #263149;
+		--color-text: #e6ebf5;
+		--color-text-secondary: #97a3ba;
+		--color-text-muted: #6b7890;
+
+		--color-primary: #4d7cf5;
+		--color-primary-accent: #6ea1ff;
+		--color-danger: #f36a6a;
+		--color-success: #34d399;
+		--color-warning: #f6ad55;
+
+		--grad-primary: linear-gradient(135deg, #2f5bdb, #4d7cf5 60%, #6ea1ff);
+		--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+		--shadow-md: 0 4px 20px rgba(0, 0, 0, 0.35);
+		--shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+	}
+}
+
+:root.dark {
+	--color-bg: #0a1122;
+	--color-surface: #131c2e;
+	--color-surface-alt: #1a2438;
+	--color-border: #263149;
+	--color-text: #e6ebf5;
+	--color-text-secondary: #97a3ba;
+	--color-text-muted: #6b7890;
+
+	--color-primary: #4d7cf5;
+	--color-primary-accent: #6ea1ff;
+	--color-danger: #f36a6a;
+	--color-success: #34d399;
+	--color-warning: #f6ad55;
+
+	--grad-primary: linear-gradient(135deg, #2f5bdb, #4d7cf5 60%, #6ea1ff);
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shadow-md: 0 4px 20px rgba(0, 0, 0, 0.35);
+	--shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
 }
 
 html, body {
 	background: var(--color-bg);
+	color: var(--color-text);
 	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;
+	transition: background-color .2s ease, color .2s ease;
 }
 
-/* Tarjetas “glass” ligeras */
+/* ===== Tarjetas ===== */
 .card {
-	@apply bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-sm rounded-2xl p-4 transition-all duration-200; 
+	background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+	border: 1px solid var(--color-border);
+	color: var(--color-text);
+	box-shadow: var(--shadow-sm);
+	@apply backdrop-blur-sm rounded-2xl p-4 transition-all duration-200;
 }
-.card:hover { @apply shadow-md; }
+.card:hover { box-shadow: var(--shadow-md); }
 
-/* Botones base */
+/* ===== Botones ===== */
 .btn { @apply inline-flex items-center justify-center font-medium rounded-xl px-4 py-2 text-sm transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed; }
-.btn-primary { @apply text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow; }
-.btn-outline { @apply border border-blue-500 text-blue-600 hover:bg-blue-50; }
-.btn-danger { @apply bg-red-600 text-white hover:bg-red-500; }
-.btn-success { @apply bg-green-600 text-white hover:bg-green-500; }
+.btn-primary { color: white; background-image: var(--grad-primary); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-outline { border: 1px solid var(--color-primary); color: var(--color-primary); background: transparent; }
+.btn-outline:hover { background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+.btn-danger { @apply text-white; background: var(--color-danger); }
+.btn-danger:hover { filter: brightness(1.08); }
+.btn-success { @apply text-white; background: var(--color-success); }
+.btn-success:hover { filter: brightness(1.08); }
+.btn-secondary { border: 1px solid var(--color-border); color: var(--color-text-secondary); background: var(--color-surface-alt); }
+.btn-secondary:hover { color: var(--color-text); }
 
-/* Pills / badges */
-.badge { @apply rounded-full px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-600; }
-.badge-green { @apply bg-green-100 text-green-700; }
-.badge-red { @apply bg-red-100 text-red-700; }
+/* ===== Utilidades semánticas ===== */
+.text-success { color: var(--color-success); }
+.text-danger { color: var(--color-danger); }
+.text-muted { color: var(--color-text-muted); }
+.text-secondary { color: var(--color-text-secondary); }
+.surface-success { background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-success) 25%, var(--color-border)); }
+.surface-danger { background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface)); border-color: color-mix(in srgb, var(--color-danger) 25%, var(--color-border)); }
+
+/* ===== Pills / badges ===== */
+.badge { border-radius: var(--radius-full); @apply px-2.5 py-1 text-xs font-medium; background: var(--color-surface-alt); color: var(--color-text-secondary); }
+.badge-green { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 16%, transparent); }
+.badge-red { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 16%, transparent); }
+
+/* ===== Inputs ===== */
+.input,
+input[type='text'], input[type='number'], input[type='time'], input[type='date'], input[type='datetime-local'], textarea, select {
+	width: 100%;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border);
+	background: var(--color-surface);
+	color: var(--color-text);
+	@apply outline-none px-3 py-2 text-sm transition-colors;
+}
+.input:focus, input:focus, textarea:focus, select:focus {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+}
+::placeholder { color: var(--color-text-muted); }
 
 /* Scroll suave para panel principal */
 main::-webkit-scrollbar { width: 8px; }
 main::-webkit-scrollbar-track { background: transparent; }
-main::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 20px; }
-main::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+main::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 20px; }
 
-/* Header flotante con difuminado */
-.app-header { @apply backdrop-blur-md bg-white/70 border-b border-gray-200/70; }
+/* ===== Header flotante con difuminado ===== */
+.app-header {
+	background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+	border-bottom: 1px solid var(--color-border);
+	@apply backdrop-blur-md;
+}
 
-/* Bottom nav flotante */
+/* ===== Bottom nav flotante ===== */
 .bottom-nav-wrapper { @apply fixed bottom-2 left-0 right-0 flex justify-center; }
-.bottom-nav { @apply bg-white/90 backdrop-blur-md border border-gray-200/70 rounded-2xl shadow-lg flex w-full max-w-md mx-auto px-2 py-1; }
-.bottom-nav button { @apply flex-1 flex flex-col items-center justify-center py-2 text-[11px] font-medium text-gray-500 gap-0.5 transition-colors duration-150; }
-.bottom-nav button.active { @apply text-blue-600; }
+.bottom-nav {
+	background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+	border: 1px solid var(--color-border);
+	box-shadow: var(--shadow-lg);
+	@apply backdrop-blur-md rounded-2xl flex w-full max-w-md mx-auto px-2 py-1;
+}
+.bottom-nav a { color: var(--color-text-muted); @apply flex-1 flex flex-col items-center justify-center py-2 text-[11px] font-medium gap-0.5 transition-colors duration-150 no-underline cursor-pointer; }
+.bottom-nav a.active { color: var(--color-primary); }
 
-/* Floating Action Button */
-.fab { @apply fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl bg-gradient-to-br from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-transform duration-200; }
+/* ===== Floating Action Button ===== */
+.fab {
+	color: white;
+	background-image: var(--grad-primary);
+	box-shadow: var(--shadow-lg);
+	@apply fixed bottom-24 right-6 w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-200;
+}
 .fab:active { @apply scale-95; }
+.fab:hover { filter: brightness(1.05); }
 
-/* Modal overlay refinado */
-.modal-overlay { @apply fixed inset-0 bg-gray-900/30 backdrop-blur-sm flex items-center justify-center p-4 z-50; }
-.modal-panel { @apply bg-white rounded-2xl w-full max-w-md p-5 shadow-xl border border-gray-200; }
+/* ===== Modal ===== */
+.modal-overlay { background: rgba(8, 12, 24, 0.45); @apply fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50; }
+.modal-panel {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	color: var(--color-text);
+	box-shadow: var(--shadow-lg);
+	@apply rounded-2xl w-full max-w-md p-5;
+}
 
-/* Inputs */
-input[type='text'], input[type='number'], select { @apply w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none px-3 py-2 text-sm bg-white; }
+/* ===== Layout ===== */
+.app-shell { @apply flex flex-col; min-height: 100dvh; }
 
-/* Utilidad de layout principal */
-.app-shell { @apply flex flex-col; min-height:100dvh; }
+/* ===== Tipografía ===== */
+.title-lg { color: var(--color-text); @apply text-xl font-semibold tracking-tight; }
+.title-sm { color: var(--color-text-secondary); @apply text-sm font-medium uppercase; letter-spacing: .08em; }
 
-/* Tipografía utilidades extra */
-.title-lg { @apply text-xl font-semibold tracking-tight text-gray-800; }
-.title-sm { @apply text-sm font-medium text-gray-500 uppercase; letter-spacing: .08em; }
+/* ===== Tarjeta de métrica circular ===== */
+.ring-metric { background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 10%, transparent), color-mix(in srgb, var(--color-primary) 18%, transparent)); @apply relative flex items-center justify-center w-40 h-40 rounded-full; }
+.ring-metric-value { color: var(--color-primary); @apply text-2xl font-bold; }
 
-/* Tarjeta de métrica circular (placeholder) */
-.ring-metric { @apply relative flex items-center justify-center w-40 h-40 rounded-full bg-gradient-to-tr from-blue-50 to-blue-100; }
-.ring-metric-value { @apply text-2xl font-bold text-blue-700; }
+/* ===== Estados vacíos / skeleton ===== */
+.empty-state { color: var(--color-text-secondary); @apply flex flex-col items-center justify-center text-center gap-2 py-10 px-4; }
+.empty-state-icon { color: var(--color-text-muted); @apply w-10 h-10; }
 
-/* Animaciones sencillas */
+.skeleton { background: linear-gradient(90deg, var(--color-surface-alt) 25%, var(--color-border) 37%, var(--color-surface-alt) 63%); background-size: 400% 100%; animation: skeleton-loading 1.4s ease infinite; border-radius: var(--radius-md); }
+@keyframes skeleton-loading { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+/* ===== Animaciones ===== */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: translateY(0);} }
 .fade-in { animation: fadeIn .25s ease; }
+.animate-fade-in-fast { animation: fadeIn .15s ease; }
 
-/* Ocultar focus feo en botones icono */
-button:focus { outline: none; }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+.modal-panel { animation: scaleIn .18s cubic-bezier(.2,.8,.2,1); }
 
-/* Safe area top para iOS notch: evita que el encabezado quede parcialmente oculto */
-/* Header + main con offset dinámico */
+.loader-dot { width: 6px; height: 6px; border-radius: 9999px; background: currentColor; display: inline-block; animation: sync-pulse 0.9s ease-in-out infinite; }
+@keyframes sync-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.7); } }
+
+/* Ocultar focus feo en botones icono, mantener anillo accesible en botones con texto */
+button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* Toggle switch (recordatorios) */
+.switch-toggle {
+	width: 40px; height: 22px; border-radius: var(--radius-full);
+	background: var(--color-border);
+	position: relative; transition: background-color .15s ease;
+}
+.switch-toggle::after {
+	content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 9999px;
+	background: white; box-shadow: var(--shadow-sm); transition: transform .15s ease;
+}
+.peer:checked + .switch-toggle { background: var(--color-primary); }
+.peer:checked + .switch-toggle::after { transform: translateX(18px); }
+
+/* Safe area top para iOS notch */
 .app-header-inner { padding-top: calc(env(safe-area-inset-top, 0px) + 0.85rem); padding-bottom: .65rem; }
 .main-content { padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
 @supports not (padding: max(0px)) {
 	.app-header-inner { padding-top: .85rem; }
 	.main-content { padding-top: 64px; }
 }
-/* Evitar que el título salte si el viewport cambia al mostrar teclado */
 @media (orientation: portrait) {
 	.app-header { min-height: calc(env(safe-area-inset-top,0px) + 56px); }
 }

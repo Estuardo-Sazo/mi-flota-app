@@ -1,62 +1,66 @@
 <div class="app-shell">
   <!-- Banner actualización PWA -->
-  <div *ngIf="updateAvailable()" class="fixed top-0 left-0 right-0 z-50 animate-fade-in">
-    <div class="mx-auto max-w-md px-4 pt-2">
-      <div class="bg-indigo-600 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
-        <div class="flex-1">
-          <p class="font-semibold text-sm">Nueva versión disponible</p>
-          <p class="text-xs opacity-90">Actualiza para obtener mejoras y correcciones.</p>
+  @if (updateAvailable()) {
+    <div class="fixed top-0 left-0 right-0 z-50 animate-fade-in">
+      <div class="mx-auto max-w-md px-4 pt-2">
+        <div class="bg-indigo-600 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
+          <div class="flex-1">
+            <p class="font-semibold text-sm">Nueva versión disponible</p>
+            <p class="text-xs opacity-90">Actualiza para obtener mejoras y correcciones.</p>
+          </div>
+          <button
+            (click)="reloadApp()"
+            class="text-xs bg-white/15 hover:bg-white/25 transition-colors rounded-md px-3 py-1 font-medium"
+          >
+            Actualizar
+          </button>
+          <button
+            (click)="dismissUpdate()"
+            class="text-xs text-white/70 hover:text-white transition-colors font-medium px-1"
+          >
+            ×
+          </button>
         </div>
-        <button
-          (click)="reloadApp()"
-          class="text-xs bg-white/15 hover:bg-white/25 transition-colors rounded-md px-3 py-1 font-medium"
-        >
-          Actualizar
-        </button>
-        <button
-          (click)="dismissUpdate()"
-          class="text-xs text-white/70 hover:text-white transition-colors font-medium px-1"
-        >
-          ×
-        </button>
       </div>
     </div>
-  </div>
+  }
+
   <!-- Header moderno -->
   <header class="app-header fixed top-0 left-0 right-0 z-20">
     <div class="app-header-inner max-w-md mx-auto px-5 flex items-center justify-between">
-      <h1 class="title-lg">
-        {{ currentView() === 'dashboard' ? 'Dashboard' : '' }}
-        {{ currentView() === 'vehicles' ? 'Mis Vehículos' : '' }}
-        {{ currentView() === 'records' ? 'Registros' : '' }}
-        {{ currentView() === 'reports' ? 'Reportes' : '' }}
-        {{ currentView() === 'settings' ? 'Ajustes' : '' }}
-      </h1>
-      <div class="text-xs text-gray-400 font-medium tracking-wide">Mi Flota</div>
+      <h1 class="title-lg">{{ viewTitle() }}</h1>
+      <div class="flex items-center gap-3">
+        <app-sync-badge></app-sync-badge>
+        <button
+          type="button"
+          (click)="toggleTheme()"
+          class="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          [attr.aria-label]="isDarkActive() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        >
+          @if (isDarkActive()) {
+            <svg class="w-4 h-4" style="color: var(--color-text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          } @else {
+            <svg class="w-4 h-4" style="color: var(--color-text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          }
+        </button>
+      </div>
     </div>
   </header>
 
   <main class="main-content flex-grow pb-28 overflow-y-auto fade-in">
     <div class="max-w-md mx-auto px-5 py-3 space-y-4">
-      <div [ngSwitch]="currentView()">
-        <app-dashboard *ngSwitchCase="'dashboard'"></app-dashboard>
-        <app-vehicles
-          *ngSwitchCase="'vehicles'"
-          (requestTransaction)="openTransactionModal($event)"
-          (addVehicle)="openAddVehicleModal()"
-          (editVehicle)="startEditVehicle($event)"
-        ></app-vehicles>
-        <app-records *ngSwitchCase="'records'"></app-records>
-        <app-reports *ngSwitchCase="'reports'"></app-reports>
-        <app-settings *ngSwitchCase="'settings'"></app-settings>
-      </div>
+      <router-outlet></router-outlet>
     </div>
   </main>
 
   <!-- Bottom Navigation flotante -->
   <div class="bottom-nav-wrapper z-30">
     <nav class="bottom-nav">
-      <button (click)="changeView('dashboard')" [class.active]="currentView() === 'dashboard'">
+      <a routerLink="/dashboard" routerLinkActive="active">
         <svg
           class="w-5 h-5"
           fill="none"
@@ -72,8 +76,8 @@
           />
         </svg>
         <span>Inicio</span>
-      </button>
-      <button (click)="changeView('vehicles')" [class.active]="currentView() === 'vehicles'">
+      </a>
+      <a routerLink="/vehiculos" routerLinkActive="active">
         <svg
           class="w-5 h-5"
           fill="none"
@@ -89,8 +93,8 @@
           />
         </svg>
         <span>Flota</span>
-      </button>
-      <button (click)="changeView('records')" [class.active]="currentView() === 'records'">
+      </a>
+      <a routerLink="/registros" routerLinkActive="active">
         <svg
           class="w-5 h-5"
           fill="none"
@@ -106,8 +110,8 @@
           />
         </svg>
         <span>Registros</span>
-      </button>
-      <button (click)="changeView('reports')" [class.active]="currentView() === 'reports'">
+      </a>
+      <a routerLink="/reportes" routerLinkActive="active">
         <svg
           class="w-5 h-5"
           fill="none"
@@ -123,8 +127,8 @@
           />
         </svg>
         <span>Reportes</span>
-      </button>
-      <button (click)="changeView('settings')" [class.active]="currentView() === 'settings'">
+      </a>
+      <a routerLink="/ajustes" routerLinkActive="active">
         <svg
           class="w-5 h-5"
           fill="none"
@@ -146,26 +150,7 @@
           />
         </svg>
         <span>Ajustes</span>
-      </button>
+      </a>
     </nav>
   </div>
 </div>
-
-<app-transaction-modal
-  *ngIf="isTransactionModalOpen()"
-  [vehicleId]="modalVehicleId()"
-  [type]="modalTransactionType()"
-  [vehicleAlias]="modalVehicleAlias()"
-  (close)="closeTransactionModal()"
-  (save)="saveTransaction($event)"
->
-</app-transaction-modal>
-
-<!-- Add Vehicle Modal -->
-<app-add-vehicle-modal
-  *ngIf="isAddVehicleModalOpen()"
-  [vehicle]="editingVehicle()"
-  (close)="closeAddVehicleModal()"
-  (save)="saveVehicle($event)"
-  (update)="updateVehicle($event)"
-></app-add-vehicle-modal>

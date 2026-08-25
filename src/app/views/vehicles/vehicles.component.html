@@ -1,25 +1,49 @@
-<div class="space-y-4">
-  <div *ngFor="let vehicle of vehicles()" class="card">
-  <div class="flex justify-between items-start">
-      <div class="space-y-0.5">
-        <p class="text-base font-semibold text-gray-800 tracking-tight">{{ vehicle.alias }}</p>
-        <p class="text-[11px] text-gray-500 font-medium uppercase">{{ vehicle.placa }}</p>
-      </div>
-      <div class="flex gap-2">
-        <button (click)="addTransaction(vehicle, 'expense')" class="badge badge-red hover:bg-red-200/70">Gasto</button>
-        <button (click)="addTransaction(vehicle, 'income')" class="badge badge-green hover:bg-green-200/70">Ingreso</button>
-    <button (click)="startEdit(vehicle)" class="badge hover:bg-gray-200" title="Editar">✎</button>
+<div class="space-y-3">
+  @for (vehicle of vehicles(); track vehicle.id) {
+    <div class="card">
+      <div class="flex justify-between items-start gap-3">
+        <div class="space-y-0.5 min-w-0">
+          <p class="text-base font-semibold tracking-tight truncate" style="color: var(--color-text)">{{ vehicle.alias }}</p>
+          <p class="text-[11px] font-medium uppercase tracking-wide" style="color: var(--color-text-muted)">{{ vehicle.placa }}</p>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button (click)="addTransaction(vehicle, 'expense')" class="badge badge-red hover:opacity-75 transition-opacity">Gasto</button>
+          <button (click)="addTransaction(vehicle, 'income')" class="badge badge-green hover:opacity-75 transition-opacity">Ingreso</button>
+          <button (click)="startEdit(vehicle)" class="badge hover:opacity-75 transition-opacity" title="Editar" aria-label="Editar vehículo">✎</button>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div *ngIf="vehicles().length === 0" class="card text-center py-10 text-gray-500">
-    <p class="font-medium mb-1">No hay vehículos registrados.</p>
-    <p class="text-xs">Añade tu primer vehículo para empezar.</p>
-  </div>
+  } @empty {
+    <div class="card empty-state">
+      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <p class="font-medium" style="color: var(--color-text)">No hay vehículos registrados.</p>
+      <p class="text-xs">Añade tu primer vehículo para empezar.</p>
+    </div>
+  }
 </div>
 
 <!-- FAB -->
 <button (click)="openAddVehicleModal()" class="fab" aria-label="Agregar vehículo">
   <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
 </button>
+
+@if (isTransactionModalOpen()) {
+  <app-transaction-modal
+    [vehicleId]="modalVehicleId()"
+    [type]="modalTransactionType()"
+    [vehicleAlias]="modalVehicleAlias()"
+    (close)="closeTransactionModal()"
+    (save)="saveTransaction($event)"
+  ></app-transaction-modal>
+}
+
+@if (isAddVehicleModalOpen()) {
+  <app-add-vehicle-modal
+    [vehicle]="editingVehicle()"
+    (close)="closeAddVehicleModal()"
+    (save)="saveVehicle($event)"
+    (update)="updateVehicle($event)"
+  ></app-add-vehicle-modal>
+}

@@ -1,9 +1,9 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
-import { DatabaseService, Transaction, Vehicle } from '../../services/database.service';
-import { liveQuery } from 'dexie';
-import { format } from 'date-fns';
+import { TransactionService, Transaction } from '../../services/transaction.service';
+import { VehicleService } from '../../services/vehicle.service';
+import { SettingsService } from '../../services/settings.service';
 
 interface EnrichedTransaction extends Transaction {
   vehicleAlias?: string;
@@ -16,15 +16,17 @@ interface EnrichedTransaction extends Transaction {
   templateUrl: './records.component.html',
   styleUrls: ['./records.component.css'],
 })
-export class RecordsComponent implements OnInit {
-  private db = inject(DatabaseService);
+export class RecordsComponent {
+  private transactionService = inject(TransactionService);
+  private vehicleService = inject(VehicleService);
+  private settingsService = inject(SettingsService);
 
-  transactions = signal<Transaction[]>([]);
-  vehicles = signal<Vehicle[]>([]);
-  currencySymbol = signal('$');
-  deletingId = signal<number | null>(null);
+  transactions = this.transactionService.transactions;
+  vehicles = this.vehicleService.vehicles;
+  currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
+  deletingId = signal<string | null>(null);
 
-  enrichedTransactions = computed(() => {
+  enrichedTransactions = computed<EnrichedTransaction[]>(() => {
     const vehicleMap = new Map(this.vehicles().map((v) => [v.id, v.alias]));
     return this.transactions()
       .map((tx) => ({
@@ -33,20 +35,6 @@ export class RecordsComponent implements OnInit {
       }))
       .sort((a, b) => this.dateKey(b.date) - this.dateKey(a.date));
   });
-
-  ngOnInit() {
-    liveQuery(() => this.db.transactions.toArray()).subscribe((transactions) => {
-      this.transactions.set(transactions);
-    });
-    liveQuery(() => this.db.vehicles.toArray()).subscribe((vehicles) => {
-      this.vehicles.set(vehicles);
-    });
-    liveQuery(() => this.db.settings.get('currencySymbol')).subscribe((setting) => {
-      if (setting) {
-        this.currencySymbol.set(setting.value);
-      }
-    });
-  }
 
   private dateKey(date: string) {
     // yyyy-MM-dd or ISO
@@ -63,7 +51,7 @@ export class RecordsComponent implements OnInit {
     return `${day}/${month}/${year} ${time}`;
   }
 
-  askDelete(id?: number) {
+  askDelete(id?: string) {
     if (id == null) return;
     this.deletingId.set(id);
   }
@@ -75,7 +63,7 @@ export class RecordsComponent implements OnInit {
   async confirmDelete() {
     const id = this.deletingId();
     if (id != null) {
-      await this.db.transactions.delete(id);
+      await this.transactionService.remove(id);
     }
     this.deletingId.set(null);
   }

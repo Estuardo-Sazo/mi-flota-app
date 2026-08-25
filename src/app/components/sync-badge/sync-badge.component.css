@@ -1,0 +1,39 @@
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #6b7280;
+}
+
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+.is-synced .sync-dot {
+  background: var(--color-success, #059669);
+}
+
+.is-syncing .sync-dot {
+  background: #d97706;
+  animation: sync-pulse 1s ease-in-out infinite;
+}
+
+.is-offline .sync-dot {
+  background: #9ca3af;
+}
+
+.is-offline .sync-label {
+  color: #9ca3af;
+}
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}

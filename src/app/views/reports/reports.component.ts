@@ -1,8 +1,8 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DatabaseService, Transaction } from '../../services/database.service';
-import { liveQuery } from 'dexie';
+import { TransactionService } from '../../services/transaction.service';
+import { SettingsService } from '../../services/settings.service';
 import { format, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
 
 @Component({
@@ -12,11 +12,12 @@ import { format, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-f
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.css'],
 })
-export class ReportsComponent implements OnInit {
-  private db = inject(DatabaseService);
+export class ReportsComponent {
+  private transactionService = inject(TransactionService);
+  private settingsService = inject(SettingsService);
 
-  transactions = signal<Transaction[]>([]);
-  currencySymbol = signal('$');
+  transactions = this.transactionService.transactions;
+  currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
 
   // Default to today
   startDate = signal(format(new Date(), 'yyyy-MM-dd'));
@@ -69,17 +70,6 @@ export class ReportsComponent implements OnInit {
 
     return Array.from(dailyMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
   });
-
-  ngOnInit() {
-    liveQuery(() => this.db.transactions.toArray()).subscribe((transactions) => {
-      this.transactions.set(transactions);
-    });
-    liveQuery(() => this.db.settings.get('currencySymbol')).subscribe((setting) => {
-      if (setting) {
-        this.currencySymbol.set(setting.value);
-      }
-    });
-  }
 
   formatDate(dateStr: string) {
     // Handle ISO string or simple date string safely
