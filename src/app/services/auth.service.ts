@@ -43,20 +43,29 @@ export class AuthService {
     });
 
     onAuthStateChanged(this.auth, (user) => {
+      console.log('[GoogleLink] onAuthStateChanged. uid=', user?.uid, 'anon=', user?.isAnonymous, 'providers=', user?.providerData.map(p => p.providerId));
       this._user.set(user);
       this._ready.set(true);
       resolveFirstEvent();
       if (!user) {
+        console.log('[GoogleLink] Sin usuario -> creando sesión anónima nueva.');
         signInAnonymously(this.auth).catch((e) => console.error('No se pudo iniciar sesión anónima', e));
       }
     });
 
     // Recoge el resultado de un linkWithRedirect previo (si volvimos de accounts.google.com).
+    console.log('[GoogleLink] Verificando getRedirectResult()... currentUser antes =', this.auth.currentUser?.uid, 'anon=', this.auth.currentUser?.isAnonymous);
     getRedirectResult(this.auth)
       .then((result) => {
-        if (result) this._googleLinkOutcome.set({ ok: true });
+        if (result) {
+          console.log('[GoogleLink] getRedirectResult OK. uid=', result.user.uid, 'isAnonymous=', result.user.isAnonymous, 'providers=', result.user.providerData.map(p => p.providerId));
+          this._googleLinkOutcome.set({ ok: true });
+        } else {
+          console.log('[GoogleLink] getRedirectResult devolvió null (no había redirect pendiente que procesar).');
+        }
       })
       .catch((e: any) => {
+        console.error('[GoogleLink] getRedirectResult ERROR. code=', e?.code, 'message=', e?.message, e);
         if (e?.code === 'auth/credential-already-in-use') {
           this._googleLinkOutcome.set({ ok: false, reason: 'in-use', error: e });
         } else if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
@@ -81,8 +90,14 @@ export class AuthService {
    */
   async linkWithGoogle(): Promise<void> {
     const current = this.auth.currentUser;
+    console.log('[GoogleLink] Iniciando linkWithRedirect. uid=', current?.uid, 'anon=', current?.isAnonymous);
     if (!current) return;
-    await linkWithRedirect(current, new GoogleAuthProvider());
+    try {
+      await linkWithRedirect(current, new GoogleAuthProvider());
+    } catch (e) {
+      console.error('[GoogleLink] linkWithRedirect lanzó un error ANTES de redirigir:', e);
+      throw e;
+    }
   }
 
   async signOut(): Promise<void> {
