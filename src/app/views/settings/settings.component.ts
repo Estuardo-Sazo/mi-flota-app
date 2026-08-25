@@ -184,7 +184,8 @@ export class SettingsComponent {
       const uid = this.auth.uid();
       if (!uid) return;
       try {
-        const data = JSON.parse(await file.text());
+        const raw = JSON.parse(await file.text());
+        const data = this.normalizeBackup(raw);
 
         await this.replaceCollection(vehiclesPath(uid), data.vehicles ?? [], (v: any) => ({
           alias: v.alias,
@@ -193,7 +194,7 @@ export class SettingsComponent {
           updatedAt: serverTimestamp()
         }));
         await this.replaceCollection(transactionsPath(uid), data.transactions ?? [], (t: any) => ({
-          vehicleId: t.vehicleId,
+          vehicleId: String(t.vehicleId),
           date: t.date,
           type: t.type,
           amount: t.amount,
@@ -216,6 +217,34 @@ export class SettingsComponent {
       }
     };
     input.click();
+  }
+
+  /**
+   * Admite tanto el formato propio de exportación ({vehicles, transactions, reminders, settings})
+   * como un volcado Dexie legacy (backups previos a la migración a Firestore, con
+   * `formatName: 'dexie'` y las tablas dentro de `data.data`).
+   */
+  private normalizeBackup(raw: any): { vehicles: any[]; transactions: any[]; reminders: any[]; settings: any } {
+    if (raw?.formatName !== 'dexie') {
+      return raw;
+    }
+    const tables: Record<string, any[]> = {};
+    for (const t of raw.data?.data ?? []) {
+      tables[t.tableName] = t.rows ?? [];
+    }
+    const settings = (tables['settings'] ?? []).reduce(
+      (acc: Record<string, unknown>, row: { key: string; value: unknown }) => {
+        acc[row.key] = row.value;
+        return acc;
+      },
+      {}
+    );
+    return {
+      vehicles: tables['vehicles'] ?? [],
+      transactions: tables['transactions'] ?? [],
+      reminders: tables['reminders'] ?? [],
+      settings
+    };
   }
 
   /** Borra todos los documentos existentes en `path` y los reemplaza por `items`, conservando sus ids originales. */
