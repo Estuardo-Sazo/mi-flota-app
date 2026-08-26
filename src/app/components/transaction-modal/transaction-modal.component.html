@@ -1,41 +1,57 @@
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-panel" (click)="$event.stopPropagation()">
-    <h2 class="text-lg font-bold mb-4" style="color: var(--color-text)">
-      Añadir {{ type === 'income' ? 'Ingreso' : 'Gasto' }}
-      @if (vehicleAlias) {
-        <span class="text-sm font-normal text-secondary">para {{ vehicleAlias }}</span>
-      }
-    </h2>
+    <div class="flex items-center gap-3 mb-5">
+      <span class="tx-icon" [class.tx-icon-income]="type === 'income'" [class.tx-icon-expense]="type === 'expense'">
+        @if (type === 'income') {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+        } @else {
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+        }
+      </span>
+      <div class="min-w-0">
+        <h2 class="text-lg font-bold leading-tight" style="color: var(--color-text)">
+          Añadir {{ type === 'income' ? 'Ingreso' : 'Gasto' }}
+        </h2>
+        @if (vehicleAlias) {
+          <p class="text-xs text-secondary truncate">{{ vehicleAlias }}</p>
+        }
+      </div>
+    </div>
 
     <form (ngSubmit)="onSave()" class="space-y-4">
       <div>
-        <label for="amount" class="block text-sm font-medium text-secondary mb-1">Monto</label>
-        <input
-          type="number"
-          id="amount"
-          name="amount"
-          [(ngModel)]="amount"
-          required
-          inputmode="decimal"
-          pattern="[0-9]*"
-          step="0.01"
-          min="0"
-        />
+        <label for="amount" class="field-label">Monto</label>
+        <div class="input-group">
+          <span class="input-prefix">{{ currencySymbol() }}</span>
+          <input
+            type="number"
+            id="amount"
+            name="amount"
+            [(ngModel)]="amount"
+            required
+            inputmode="decimal"
+            pattern="[0-9]*"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+          />
+        </div>
       </div>
 
       <div>
-        <label for="description" class="block text-sm font-medium text-secondary mb-1">Descripción</label>
+        <label for="description" class="field-label">Descripción</label>
         <input
           type="text"
           id="description"
           name="description"
           [(ngModel)]="description"
           required
+          placeholder="Ej. Combustible, viaje al centro..."
         />
       </div>
 
       <div>
-        <label for="date" class="block text-sm font-medium text-secondary mb-1">Fecha</label>
+        <label for="date" class="field-label">Fecha</label>
         <input
           type="datetime-local"
           id="date"
@@ -47,7 +63,7 @@
 
       <div class="flex justify-end space-x-2 pt-4">
         <button type="button" (click)="onClose()" class="btn btn-outline">Cancelar</button>
-        <button type="submit" class="btn btn-primary" [disabled]="!amount() || !description()">
+        <button type="submit" class="btn" [class.btn-success]="type === 'income'" [class.btn-danger]="type === 'expense'" [disabled]="!amount() || !description()">
           Guardar
         </button>
       </div>

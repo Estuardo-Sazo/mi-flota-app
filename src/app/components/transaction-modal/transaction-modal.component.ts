@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, inject, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { format } from 'date-fns';
+import { SettingsService } from '../../services/settings.service';
 
 export interface TransactionData {
   vehicleId: string;
@@ -18,6 +19,9 @@ export interface TransactionData {
   styleUrls: ['./transaction-modal.component.css'],
 })
 export class TransactionModalComponent {
+  private settingsService = inject(SettingsService);
+  currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
+
   @Input() vehicleId: string | null = null;
   @Input() type: 'income' | 'expense' | null = null;
   @Input() vehicleAlias: string | null = null;

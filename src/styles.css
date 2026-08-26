@@ -91,7 +91,8 @@ html, body {
 .card:hover { box-shadow: var(--shadow-md); }
 
 /* ===== Botones ===== */
-.btn { @apply inline-flex items-center justify-center font-medium rounded-xl px-4 py-2 text-sm transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed; }
+.btn { @apply inline-flex items-center justify-center gap-1.5 font-medium rounded-xl px-4 py-2 text-sm transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed; }
+.btn:active:not(:disabled) { @apply scale-[0.97]; }
 .btn-primary { color: white; background-image: var(--grad-primary); box-shadow: var(--shadow-sm); }
 .btn-primary:hover { filter: brightness(1.06); }
 .btn-outline { border: 1px solid var(--color-primary); color: var(--color-primary); background: transparent; }
@@ -102,6 +103,21 @@ html, body {
 .btn-success:hover { filter: brightness(1.08); }
 .btn-secondary { border: 1px solid var(--color-border); color: var(--color-text-secondary); background: var(--color-surface-alt); }
 .btn-secondary:hover { color: var(--color-text); }
+
+/* ===== Botones de acción compactos (chips) ===== */
+.action-chip { @apply inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-150 active:scale-95; }
+.action-chip-danger { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
+.action-chip-danger:hover { background: color-mix(in srgb, var(--color-danger) 20%, transparent); }
+.action-chip-success { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 12%, transparent); }
+.action-chip-success:hover { background: color-mix(in srgb, var(--color-success) 20%, transparent); }
+
+/* ===== Botones-icono circulares (editar, eliminar, cerrar) ===== */
+.icon-btn {
+	color: var(--color-text-muted);
+	@apply inline-flex items-center justify-center w-8 h-8 rounded-full shrink-0 transition-all duration-150 active:scale-90;
+}
+.icon-btn:hover { color: var(--color-text); background: var(--color-surface-alt); }
+.icon-btn-danger:hover { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 12%, transparent); }
 
 /* ===== Utilidades semánticas ===== */
 .text-success { color: var(--color-success); }
@@ -131,6 +147,39 @@ input[type='text'], input[type='number'], input[type='time'], input[type='date']
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 ::placeholder { color: var(--color-text-muted); }
+
+/* Flecha propia para <select>, en vez del estilo nativo del sistema operativo */
+select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 1.1rem;
+	padding-right: 2.25rem;
+}
+
+/* Etiquetas de formulario consistentes */
+.field-label { color: var(--color-text-secondary); @apply block text-sm font-medium mb-1.5; }
+
+/* Prefijo (símbolo de moneda, etc.) dentro de un input */
+.input-group { @apply relative; }
+.input-group .input-prefix {
+	color: var(--color-text-muted);
+	@apply absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none;
+}
+.input-group input { padding-left: 1.75rem; }
+
+/* Avatar circular con inicial (vehículos, cuentas) */
+.avatar {
+	color: white;
+	background-image: var(--grad-primary);
+	@apply inline-flex items-center justify-center w-11 h-11 rounded-full font-bold text-sm shrink-0;
+}
+
+/* Indicador circular de tipo de movimiento (ingreso/gasto) */
+.tx-icon { @apply inline-flex items-center justify-center w-10 h-10 rounded-full shrink-0; }
+.tx-icon-income { color: var(--color-success); background: color-mix(in srgb, var(--color-success) 14%, transparent); }
+.tx-icon-expense { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 14%, transparent); }
 
 /* Scroll suave para panel principal */
 main::-webkit-scrollbar { width: 8px; }

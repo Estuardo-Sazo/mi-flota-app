@@ -1,13 +1,22 @@
 <div class="space-y-3">
   @for (tx of visibleTransactions(); track tx.id) {
     <div class="card flex justify-between items-center py-3 px-4">
-      <div class="pr-4 min-w-0">
-        <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
-        <p class="text-[11px] font-medium tracking-wide text-secondary">
-          {{ tx.vehicleAlias }} • {{ formatDate(tx.date) }}
-        </p>
+      <div class="flex items-center gap-3 pr-3 min-w-0">
+        <span class="tx-icon" [class.tx-icon-income]="tx.type === 'income'" [class.tx-icon-expense]="tx.type === 'expense'">
+          @if (tx.type === 'income') {
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+          } @else {
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+          }
+        </span>
+        <div class="min-w-0">
+          <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
+          <p class="text-[11px] font-medium tracking-wide text-secondary truncate">
+            {{ tx.vehicleAlias }} • {{ formatDate(tx.date) }}
+          </p>
+        </div>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-1 shrink-0">
         <p
           class="text-sm font-semibold tabular-nums"
           [class.text-success]="tx.type === 'income'"
@@ -18,11 +27,11 @@
         </p>
         <button
           (click)="askDelete(tx.id)"
-          class="text-xs text-danger hover:opacity-75 transition-opacity"
+          class="icon-btn icon-btn-danger"
           title="Eliminar"
           aria-label="Eliminar registro"
         >
-          ✕
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
     </div>
