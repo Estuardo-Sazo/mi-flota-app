@@ -121,3 +121,34 @@
     </div>
   </div>
 </div>
+
+<!-- Acción rápida: agregar ingreso/gasto sin ir a Flota -->
+@if (quickActionOpen()) {
+  <div class="fixed inset-0 z-40" (click)="quickActionOpen.set(false)"></div>
+}
+<div class="fab flex flex-col items-end gap-3 z-50">
+  @if (quickActionOpen()) {
+    <button (click)="openQuickTransaction('income')" class="speed-dial-chip action-chip-success animate-fade-in-fast" style="background: var(--color-surface)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+      Ingreso
+    </button>
+    <button (click)="openQuickTransaction('expense')" class="speed-dial-chip action-chip-danger animate-fade-in-fast" style="background: var(--color-surface)">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+      Gasto
+    </button>
+  }
+  <button (click)="toggleQuickAction()" class="fab-btn" [class.rotate-45]="quickActionOpen()" aria-label="Agregar movimiento rápido">
+    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+  </button>
+</div>
+
+@if (isTransactionModalOpen()) {
+  <app-transaction-modal
+    [vehicleId]="modalVehicleId()"
+    [type]="modalTransactionType()"
+    [vehicleAlias]="modalVehicleAlias()"
+    [defaultDescription]="modalDefaultDescription()"
+    (close)="closeTransactionModal()"
+    (save)="saveTransaction($event)"
+  ></app-transaction-modal>
+}

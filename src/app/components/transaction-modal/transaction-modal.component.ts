@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, inject, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, signal, inject, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { format } from 'date-fns';
 import { SettingsService } from '../../services/settings.service';
@@ -18,13 +18,14 @@ export interface TransactionData {
   templateUrl: './transaction-modal.component.html',
   styleUrls: ['./transaction-modal.component.css'],
 })
-export class TransactionModalComponent {
+export class TransactionModalComponent implements OnInit {
   private settingsService = inject(SettingsService);
   currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
 
   @Input() vehicleId: string | null = null;
   @Input() type: 'income' | 'expense' | null = null;
   @Input() vehicleAlias: string | null = null;
+  @Input() defaultDescription: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<TransactionData>();
 
@@ -32,6 +33,10 @@ export class TransactionModalComponent {
   description = signal('');
   // Usar fecha local (no UTC) para evitar desfase - se formatea con date-fns en zona local
   date = signal(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
+
+  ngOnInit() {
+    if (this.defaultDescription) this.description.set(this.defaultDescription);
+  }
 
   onSave() {
     if (this.vehicleId && this.type && this.amount() !== null && this.description()) {

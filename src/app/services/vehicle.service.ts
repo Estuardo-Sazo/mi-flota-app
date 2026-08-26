@@ -25,6 +25,16 @@ export class VehicleService {
   readonly vehicles = this._vehicles.asReadonly();
   readonly activeVehicles = computed(() => this._vehicles().filter((v) => v.active !== false));
   readonly inactiveVehicles = computed(() => this._vehicles().filter((v) => v.active === false));
+  /** El vehículo activo más recientemente creado o editado (para acciones rápidas). */
+  readonly mostRecentVehicle = computed<Vehicle | null>(() => {
+    const list = this.activeVehicles();
+    if (list.length === 0) return null;
+    return [...list].sort((a, b) => {
+      const aTime = (a.updatedAt ?? a.createdAt)?.toMillis() ?? 0;
+      const bTime = (b.updatedAt ?? b.createdAt)?.toMillis() ?? 0;
+      return bTime - aTime;
+    })[0];
+  });
 
   constructor() {
     effect((onCleanup) => {

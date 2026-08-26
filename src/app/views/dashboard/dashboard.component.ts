@@ -1,24 +1,68 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TransactionService } from '../../services/transaction.service';
+import { VehicleService } from '../../services/vehicle.service';
 import { SettingsService } from '../../services/settings.service';
+import {
+  TransactionModalComponent,
+  TransactionData,
+} from '../../components/transaction-modal/transaction-modal.component';
 import { startOfMonth, endOfMonth, format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+const DEFAULT_DESCRIPTIONS = { income: 'Viaje', expense: 'Gasolina' } as const;
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TransactionModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
 export class DashboardComponent {
   private transactionService = inject(TransactionService);
+  private vehicleService = inject(VehicleService);
   private settingsService = inject(SettingsService);
 
   transactions = this.transactionService.transactions;
   currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
   selectedMonth = signal<Date>(startOfMonth(new Date()));
+
+  // Acción rápida: agregar ingreso/gasto sin ir a Flota
+  quickActionOpen = signal(false);
+  isTransactionModalOpen = signal(false);
+  modalVehicleId = signal<string | null>(null);
+  modalVehicleAlias = signal<string | null>(null);
+  modalTransactionType = signal<'income' | 'expense' | null>(null);
+  modalDefaultDescription = signal<string | null>(null);
+
+  toggleQuickAction() {
+    if (!this.vehicleService.mostRecentVehicle()) {
+      alert('Agrega un vehículo primero desde Flota.');
+      return;
+    }
+    this.quickActionOpen.update((v) => !v);
+  }
+
+  openQuickTransaction(type: 'income' | 'expense') {
+    const vehicle = this.vehicleService.mostRecentVehicle();
+    if (!vehicle) return;
+    this.modalVehicleId.set(vehicle.id);
+    this.modalVehicleAlias.set(vehicle.alias);
+    this.modalTransactionType.set(type);
+    this.modalDefaultDescription.set(DEFAULT_DESCRIPTIONS[type]);
+    this.quickActionOpen.set(false);
+    this.isTransactionModalOpen.set(true);
+  }
+
+  closeTransactionModal() {
+    this.isTransactionModalOpen.set(false);
+  }
+
+  async saveTransaction(data: TransactionData) {
+    await this.transactionService.add(data);
+    this.closeTransactionModal();
+  }
 
   currentMonthTransactions = computed(() => {
     const month = this.selectedMonth();
