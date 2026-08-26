@@ -149,6 +149,20 @@ export class SettingsComponent {
     }
   }
 
+  /** Para cuando la cuenta de Google ya está vinculada a otro dispositivo: inicia sesión con ella aquí. */
+  async signInExistingGoogle() {
+    this.googleLinkState.set('linking');
+    const result = await this.auth.signInWithGoogle();
+    if (result.ok) {
+      this.googleLinkState.set('idle');
+    } else if (result.reason === 'popup-closed') {
+      this.googleLinkState.set('in-use');
+    } else {
+      this.googleLinkState.set('error');
+      console.error('Error al iniciar sesión con Google', result.error);
+    }
+  }
+
   async signOutAccount() {
     if (!confirm('¿Cerrar sesión? En este dispositivo perderás acceso a estos datos hasta volver a iniciar sesión con la misma cuenta.')) return;
     await this.auth.signOut();

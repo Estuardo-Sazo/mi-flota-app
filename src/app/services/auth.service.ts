@@ -7,6 +7,7 @@ import {
   linkWithPopup,
   onAuthStateChanged,
   signInAnonymously,
+  signInWithPopup,
   signOut
 } from '@angular/fire/auth';
 
@@ -43,29 +44,20 @@ export class AuthService {
     });
 
     onAuthStateChanged(this.auth, (user) => {
-      console.log('[GoogleLink] onAuthStateChanged. uid=', user?.uid, 'anon=', user?.isAnonymous, 'providers=', user?.providerData.map(p => p.providerId));
       this._user.set(user);
       this._ready.set(true);
       resolveFirstEvent();
       if (!user) {
-        console.log('[GoogleLink] Sin usuario -> creando sesión anónima nueva.');
         signInAnonymously(this.auth).catch((e) => console.error('No se pudo iniciar sesión anónima', e));
       }
     });
 
-    // Recoge el resultado de un linkWithRedirect previo (si volvimos de accounts.google.com).
-    console.log('[GoogleLink] Verificando getRedirectResult()... currentUser antes =', this.auth.currentUser?.uid, 'anon=', this.auth.currentUser?.isAnonymous);
+    // Recoge el resultado de un linkWithRedirect previo (algunos navegadores usan redirect en vez de popup).
     getRedirectResult(this.auth)
       .then((result) => {
-        if (result) {
-          console.log('[GoogleLink] getRedirectResult OK. uid=', result.user.uid, 'isAnonymous=', result.user.isAnonymous, 'providers=', result.user.providerData.map(p => p.providerId));
-          this._googleLinkOutcome.set({ ok: true });
-        } else {
-          console.log('[GoogleLink] getRedirectResult devolvió null (no había redirect pendiente que procesar).');
-        }
+        if (result) this._googleLinkOutcome.set({ ok: true });
       })
       .catch((e: any) => {
-        console.error('[GoogleLink] getRedirectResult ERROR. code=', e?.code, 'message=', e?.message, e);
         if (e?.code === 'auth/credential-already-in-use') {
           this._googleLinkOutcome.set({ ok: false, reason: 'in-use', error: e });
         } else if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
@@ -84,25 +76,38 @@ export class AuthService {
     ]);
   }
 
-  /** Abre un popup para vincular la cuenta anónima con Google. */
+  /** Abre un popup para vincular la cuenta anónima actual con Google. */
   async linkWithGoogle(): Promise<LinkGoogleResult> {
     const current = this.auth.currentUser;
-    console.log('[GoogleLink] Iniciando linkWithPopup. uid=', current?.uid, 'anon=', current?.isAnonymous);
     if (!current) {
       return { ok: false, reason: 'other', error: new Error('No hay sesión activa') };
     }
     try {
-      const result = await Promise.race([
+      await Promise.race([
         linkWithPopup(current, new GoogleAuthProvider()),
         new Promise<never>((_, reject) => setTimeout(() => reject(Object.assign(new Error('Tiempo de espera agotado'), { code: 'app/timeout' })), 30000))
       ]);
-      console.log('[GoogleLink] linkWithPopup OK. uid=', result.user.uid, 'providers=', result.user.providerData.map((p) => p.providerId));
       return { ok: true };
     } catch (e: any) {
-      console.error('[GoogleLink] linkWithPopup ERROR. code=', e?.code, 'message=', e?.message, e);
       if (e?.code === 'auth/credential-already-in-use') {
         return { ok: false, reason: 'in-use', error: e };
       }
+      if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+        return { ok: false, reason: 'popup-closed', error: e };
+      }
+      return { ok: false, reason: 'other', error: e };
+    }
+  }
+
+  /** Abre un popup para iniciar sesión con una cuenta de Google ya existente (otro dispositivo). */
+  async signInWithGoogle(): Promise<LinkGoogleResult> {
+    try {
+      await Promise.race([
+        signInWithPopup(this.auth, new GoogleAuthProvider()),
+        new Promise<never>((_, reject) => setTimeout(() => reject(Object.assign(new Error('Tiempo de espera agotado'), { code: 'app/timeout' })), 30000))
+      ]);
+      return { ok: true };
+    } catch (e: any) {
       if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
         return { ok: false, reason: 'popup-closed', error: e };
       }
