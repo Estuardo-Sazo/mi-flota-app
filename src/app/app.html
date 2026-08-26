@@ -2,7 +2,7 @@
   <!-- Banner actualización PWA -->
   @if (updateAvailable()) {
     <div class="fixed top-0 left-0 right-0 z-50 animate-fade-in">
-      <div class="mx-auto max-w-md px-4 pt-2">
+      <div class="mx-auto max-w-md px-4" style="padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem)">
         <div class="bg-indigo-600 text-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
           <div class="flex-1">
             <p class="font-semibold text-sm">Nueva versión disponible</p>

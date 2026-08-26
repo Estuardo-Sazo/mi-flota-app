@@ -138,7 +138,15 @@ export class SettingsComponent {
 
   async connectGoogle() {
     this.googleLinkState.set('linking');
-    await this.auth.linkWithGoogle();
+    const result = await this.auth.linkWithGoogle();
+    if (result.ok || result.reason === 'popup-closed') {
+      this.googleLinkState.set('idle');
+    } else if (result.reason === 'in-use') {
+      this.googleLinkState.set('in-use');
+    } else {
+      this.googleLinkState.set('error');
+      console.error('Error al vincular con Google', result.error);
+    }
   }
 
   async signOutAccount() {

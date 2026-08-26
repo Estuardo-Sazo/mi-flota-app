@@ -4,7 +4,7 @@ import {
   User,
   GoogleAuthProvider,
   getRedirectResult,
-  linkWithRedirect,
+  linkWithPopup,
   onAuthStateChanged,
   signInAnonymously,
   signOut
@@ -84,19 +84,29 @@ export class AuthService {
     ]);
   }
 
-  /**
-   * Redirige a accounts.google.com para vincular la cuenta anónima (deja la página).
-   * El resultado llega en `googleLinkOutcome` cuando la app vuelve a cargar.
-   */
-  async linkWithGoogle(): Promise<void> {
+  /** Abre un popup para vincular la cuenta anónima con Google. */
+  async linkWithGoogle(): Promise<LinkGoogleResult> {
     const current = this.auth.currentUser;
-    console.log('[GoogleLink] Iniciando linkWithRedirect. uid=', current?.uid, 'anon=', current?.isAnonymous);
-    if (!current) return;
+    console.log('[GoogleLink] Iniciando linkWithPopup. uid=', current?.uid, 'anon=', current?.isAnonymous);
+    if (!current) {
+      return { ok: false, reason: 'other', error: new Error('No hay sesión activa') };
+    }
     try {
-      await linkWithRedirect(current, new GoogleAuthProvider());
-    } catch (e) {
-      console.error('[GoogleLink] linkWithRedirect lanzó un error ANTES de redirigir:', e);
-      throw e;
+      const result = await Promise.race([
+        linkWithPopup(current, new GoogleAuthProvider()),
+        new Promise<never>((_, reject) => setTimeout(() => reject(Object.assign(new Error('Tiempo de espera agotado'), { code: 'app/timeout' })), 30000))
+      ]);
+      console.log('[GoogleLink] linkWithPopup OK. uid=', result.user.uid, 'providers=', result.user.providerData.map((p) => p.providerId));
+      return { ok: true };
+    } catch (e: any) {
+      console.error('[GoogleLink] linkWithPopup ERROR. code=', e?.code, 'message=', e?.message, e);
+      if (e?.code === 'auth/credential-already-in-use') {
+        return { ok: false, reason: 'in-use', error: e };
+      }
+      if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+        return { ok: false, reason: 'popup-closed', error: e };
+      }
+      return { ok: false, reason: 'other', error: e };
     }
   }
 
