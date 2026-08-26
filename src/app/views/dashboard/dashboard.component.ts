@@ -77,6 +77,8 @@ export class DashboardComponent {
     return Array.from(dailyMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
   });
 
+  recentDailySummaries = computed(() => this.dailySummaries().slice(0, 3));
+
   formatDate(date: string) {
     return new Date(date).toLocaleDateString('es-ES');
   }

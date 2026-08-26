@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed } from '@angular/core';
+import { Component, signal, inject, computed, effect, viewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { TransactionService, Transaction } from '../../services/transaction.service';
@@ -9,6 +9,8 @@ interface EnrichedTransaction extends Transaction {
   vehicleAlias?: string;
 }
 
+const PAGE_SIZE = 20;
+
 @Component({
   selector: 'app-records',
   standalone: true,
@@ -16,7 +18,7 @@ interface EnrichedTransaction extends Transaction {
   templateUrl: './records.component.html',
   styleUrls: ['./records.component.css'],
 })
-export class RecordsComponent {
+export class RecordsComponent implements OnDestroy {
   private transactionService = inject(TransactionService);
   private vehicleService = inject(VehicleService);
   private settingsService = inject(SettingsService);
@@ -33,13 +35,34 @@ export class RecordsComponent {
         ...tx,
         vehicleAlias: vehicleMap.get(tx.vehicleId) || 'Vehículo desconocido',
       }))
-      .sort((a, b) => this.dateKey(b.date) - this.dateKey(a.date));
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   });
 
-  private dateKey(date: string) {
-    // yyyy-MM-dd or ISO
-    const dObj = new Date(date);
-    return dObj.getFullYear() * 10000 + (dObj.getMonth() + 1) * 100 + dObj.getDate();
+  visibleCount = signal(PAGE_SIZE);
+  visibleTransactions = computed(() => this.enrichedTransactions().slice(0, this.visibleCount()));
+  hasMore = computed(() => this.visibleCount() < this.enrichedTransactions().length);
+
+  private sentinel = viewChild<ElementRef<HTMLElement>>('sentinel');
+  private observer?: IntersectionObserver;
+
+  constructor() {
+    effect(() => {
+      const el = this.sentinel()?.nativeElement;
+      this.observer?.disconnect();
+      if (!el) return;
+      this.observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) this.loadMore();
+      });
+      this.observer.observe(el);
+    });
+  }
+
+  ngOnDestroy() {
+    this.observer?.disconnect();
+  }
+
+  loadMore() {
+    if (this.hasMore()) this.visibleCount.update((n) => n + PAGE_SIZE);
   }
 
   formatDate(date: string) {

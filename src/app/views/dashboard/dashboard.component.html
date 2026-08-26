@@ -58,9 +58,12 @@
 
   <!-- Resumen Diario -->
   <div class="space-y-3">
-    <h3 class="text-sm font-semibold" style="color: var(--color-text)">Resumen Diario</h3>
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold" style="color: var(--color-text)">Resumen Diario</h3>
+      <span class="text-[11px] text-muted">Últimos 3 días</span>
+    </div>
     <div class="space-y-2">
-      @for (day of dailySummaries(); track day.date.toISOString()) {
+      @for (day of recentDailySummaries(); track day.date.toISOString()) {
         <div class="card py-3 px-4">
           <div class="flex items-center justify-between mb-1">
             <span class="text-sm font-medium" style="color: var(--color-text)">{{

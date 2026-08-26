@@ -1,5 +1,5 @@
 <div class="space-y-3">
-  @for (tx of enrichedTransactions(); track tx.id) {
+  @for (tx of visibleTransactions(); track tx.id) {
     <div class="card flex justify-between items-center py-3 px-4">
       <div class="pr-4 min-w-0">
         <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
@@ -33,6 +33,9 @@
       </svg>
       <p class="text-sm">No hay registros.</p>
     </div>
+  }
+  @if (hasMore()) {
+    <div #sentinel class="py-4 text-center text-xs text-secondary">Cargando más…</div>
   }
 </div>
 
