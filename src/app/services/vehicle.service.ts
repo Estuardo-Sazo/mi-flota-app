@@ -1,4 +1,4 @@
-import { Injectable, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Firestore, addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
 import { Timestamp, serverTimestamp } from 'firebase/firestore';
 import { AuthService } from './auth.service';
@@ -9,6 +9,7 @@ export interface Vehicle {
   id: string;
   alias: string;
   placa: string;
+  active?: boolean;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
@@ -20,7 +21,10 @@ export class VehicleService {
   private syncStatus = inject(SyncStatusService);
 
   private _vehicles = signal<Vehicle[]>([]);
+  /** Todos los vehículos, incluyendo desactivados (para resolver alias en registros históricos). */
   readonly vehicles = this._vehicles.asReadonly();
+  readonly activeVehicles = computed(() => this._vehicles().filter((v) => v.active !== false));
+  readonly inactiveVehicles = computed(() => this._vehicles().filter((v) => v.active === false));
 
   constructor() {
     effect((onCleanup) => {
@@ -61,6 +65,14 @@ export class VehicleService {
   remove(id: string) {
     const uid = this.requireUid();
     return deleteDoc(doc(this.firestore, `${vehiclesPath(uid)}/${id}`));
+  }
+
+  setActive(id: string, active: boolean) {
+    const uid = this.requireUid();
+    return updateDoc(doc(this.firestore, `${vehiclesPath(uid)}/${id}`), {
+      active,
+      updatedAt: serverTimestamp()
+    });
   }
 
   private requireUid(): string {

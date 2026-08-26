@@ -1,3 +1,10 @@
+<div class="flex items-center justify-between px-1">
+  <p class="text-xs text-secondary">{{ vehicles().length }} vehículo(s) activo(s)</p>
+  <a routerLink="/vehiculos/desactivados" class="text-xs font-medium" style="color: var(--color-primary)">
+    Desactivados @if (inactiveCount() > 0) {<span>({{ inactiveCount() }})</span>}
+  </a>
+</div>
+
 <div class="space-y-3">
   @for (vehicle of vehicles(); track vehicle.id) {
     <div class="card">
@@ -9,6 +16,9 @@
         </div>
         <button (click)="startEdit(vehicle)" class="icon-btn" title="Editar" aria-label="Editar vehículo">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </button>
+        <button (click)="askDeactivate(vehicle)" class="icon-btn icon-btn-danger" title="Desactivar" aria-label="Desactivar vehículo">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.36 6.64a9 9 0 11-12.73 0M12 3v9"/></svg>
         </button>
       </div>
       <div class="flex gap-2 mt-3">
@@ -55,4 +65,15 @@
     (save)="saveVehicle($event)"
     (update)="updateVehicle($event)"
   ></app-add-vehicle-modal>
+}
+
+@if (deactivatingVehicle(); as vehicle) {
+  <app-confirm-dialog
+    title="Desactivar vehículo"
+    [message]="'Desactivar ' + vehicle.alias + '. Dejará de aparecer en tu flota, pero sus registros se conservan. Puedes reactivarlo cuando quieras desde Desactivados.'"
+    confirmText="Desactivar"
+    cancelText="Cancelar"
+    (confirm)="confirmDeactivate()"
+    (cancel)="cancelDeactivate()"
+  ></app-confirm-dialog>
 }

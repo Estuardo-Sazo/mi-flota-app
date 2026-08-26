@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { VehicleService, Vehicle } from '../../services/vehicle.service';
 import { TransactionService } from '../../services/transaction.service';
 import {
@@ -6,11 +7,12 @@ import {
   TransactionData,
 } from '../../components/transaction-modal/transaction-modal.component';
 import { AddVehicleModalComponent } from '../../components/add-vehicle-modal/add-vehicle-modal.component';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-vehicles',
   standalone: true,
-  imports: [TransactionModalComponent, AddVehicleModalComponent],
+  imports: [RouterLink, TransactionModalComponent, AddVehicleModalComponent, ConfirmDialogComponent],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.css']
 })
@@ -18,7 +20,8 @@ export class VehiclesComponent {
   private vehicleService = inject(VehicleService);
   private transactionService = inject(TransactionService);
 
-  vehicles = this.vehicleService.vehicles;
+  vehicles = this.vehicleService.activeVehicles;
+  inactiveCount = computed(() => this.vehicleService.inactiveVehicles().length);
 
   isTransactionModalOpen = signal(false);
   isAddVehicleModalOpen = signal(false);
@@ -26,6 +29,7 @@ export class VehiclesComponent {
   modalVehicleId = signal<string | null>(null);
   modalTransactionType = signal<'income' | 'expense' | null>(null);
   modalVehicleAlias = signal<string | null>(null);
+  deactivatingVehicle = signal<Vehicle | null>(null);
 
   addTransaction(vehicle: Vehicle, type: 'income' | 'expense') {
     if (vehicle.id) {
@@ -67,5 +71,21 @@ export class VehiclesComponent {
   async updateVehicle(data: { id: string; alias: string; placa: string }) {
     await this.vehicleService.update(data.id, { alias: data.alias, placa: data.placa });
     this.closeAddVehicleModal();
+  }
+
+  askDeactivate(vehicle: Vehicle) {
+    this.deactivatingVehicle.set(vehicle);
+  }
+
+  cancelDeactivate() {
+    this.deactivatingVehicle.set(null);
+  }
+
+  async confirmDeactivate() {
+    const vehicle = this.deactivatingVehicle();
+    if (vehicle?.id) {
+      await this.vehicleService.setActive(vehicle.id, false);
+    }
+    this.deactivatingVehicle.set(null);
   }
 }

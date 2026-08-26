@@ -1,0 +1,26 @@
+<a routerLink="/vehiculos" class="inline-flex items-center gap-1 text-xs font-medium mb-1" style="color: var(--color-primary)">
+  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+  Volver a Flota
+</a>
+
+<div class="space-y-3 mt-2">
+  @for (vehicle of vehicles(); track vehicle.id) {
+    <div class="card">
+      <div class="flex items-center gap-3">
+        <span class="avatar" style="background-image: none; background: var(--color-surface-alt); color: var(--color-text-muted)">{{ vehicle.alias.charAt(0).toUpperCase() }}</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-base font-semibold tracking-tight truncate" style="color: var(--color-text)">{{ vehicle.alias }}</p>
+          <p class="text-[11px] font-medium uppercase tracking-wide" style="color: var(--color-text-muted)">{{ vehicle.placa }}</p>
+        </div>
+        <button (click)="reactivate(vehicle.id)" class="btn btn-outline !h-9 shrink-0">Reactivar</button>
+      </div>
+    </div>
+  } @empty {
+    <div class="card empty-state">
+      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4" />
+      </svg>
+      <p class="font-medium" style="color: var(--color-text)">No hay vehículos desactivados.</p>
+    </div>
+  }
+</div>

@@ -13,6 +13,12 @@ export const routes: Routes = [
     data: { title: 'Mis Vehículos' }
   },
   {
+    path: 'vehiculos/desactivados',
+    loadComponent: () =>
+      import('./views/inactive-vehicles/inactive-vehicles.component').then((m) => m.InactiveVehiclesComponent),
+    data: { title: 'Vehículos Desactivados' }
+  },
+  {
     path: 'registros',
     loadComponent: () => import('./views/records/records.component').then((m) => m.RecordsComponent),
     data: { title: 'Registros' }
