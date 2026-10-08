@@ -1,0 +1,1 @@
+import{e}from"./chunk-2OGU7LWZ.js";function s(o,r){let t=e(o,r?.in),n=t.getMonth();return t.setFullYear(t.getFullYear(),n+1,0),t.setHours(23,59,59,999),t}function i(o,r){let t=e(o,r?.in);return t.setDate(1),t.setHours(0,0,0,0),t}export{s as a,i as b};

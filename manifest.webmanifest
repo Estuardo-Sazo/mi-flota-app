@@ -1,0 +1,36 @@
+{
+  "name": "Mi Flota",
+  "short_name": "Mi Flota",
+  "description": "Registra ingresos y gastos de tus vehículos, incluso sin conexión.",
+  "lang": "es",
+  "start_url": "/mi-flota-app/",
+  "scope": "/mi-flota-app/",
+  "display": "standalone",
+  "background_color": "#0c1014",
+  "theme_color": "#0c1014",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    { "src": "icons/android/android-launchericon-72-72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-96-96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-144-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "icons/ios/152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-192-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-512-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/android/android-launchericon-512-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar ingreso o gasto",
+      "short_name": "Registrar",
+      "url": "/mi-flota-app/dashboard?add=transaction",
+      "icons": [{ "src": "icons/android/android-launchericon-192-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Ver registros",
+      "short_name": "Registros",
+      "url": "/mi-flota-app/registros",
+      "icons": [{ "src": "icons/android/android-launchericon-192-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
