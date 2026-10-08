@@ -42,6 +42,7 @@ export class ThemeService {
 
   private readStored(): ThemePreference {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+    // Oscuro por defecto; el usuario puede cambiarlo en Ajustes.
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
   }
 }

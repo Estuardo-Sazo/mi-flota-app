@@ -5,18 +5,18 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () => import('./views/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    data: { title: 'Dashboard' }
+    data: { title: 'Resumen' }
   },
   {
     path: 'vehiculos',
     loadComponent: () => import('./views/vehicles/vehicles.component').then((m) => m.VehiclesComponent),
-    data: { title: 'Mis Vehículos' }
+    data: { title: 'Mi flota' }
   },
   {
     path: 'vehiculos/desactivados',
     loadComponent: () =>
       import('./views/inactive-vehicles/inactive-vehicles.component').then((m) => m.InactiveVehiclesComponent),
-    data: { title: 'Vehículos Desactivados' }
+    data: { title: 'Desactivados' }
   },
   {
     path: 'registros',

@@ -1,7 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { VehicleService, Vehicle } from '../../services/vehicle.service';
 import { TransactionService } from '../../services/transaction.service';
+import { SettingsService } from '../../services/settings.service';
+import { ToastService } from '../../services/toast.service';
 import {
   TransactionModalComponent,
   TransactionData,
@@ -9,34 +13,67 @@ import {
 import { AddVehicleModalComponent } from '../../components/add-vehicle-modal/add-vehicle-modal.component';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { queueWrite } from '../../utils/queue-write';
+import { parseTxDate } from '../../utils/dates';
 
 @Component({
   selector: 'app-vehicles',
   standalone: true,
-  imports: [RouterLink, TransactionModalComponent, AddVehicleModalComponent, ConfirmDialogComponent],
+  imports: [RouterLink, DecimalPipe, TransactionModalComponent, AddVehicleModalComponent, ConfirmDialogComponent],
   templateUrl: './vehicles.component.html',
   styleUrls: ['./vehicles.component.css']
 })
-export class VehiclesComponent {
+export class VehiclesComponent implements OnInit {
+  private route = inject(ActivatedRoute);
   private vehicleService = inject(VehicleService);
   private transactionService = inject(TransactionService);
+  private settingsService = inject(SettingsService);
+  private toast = inject(ToastService);
 
   vehicles = this.vehicleService.activeVehicles;
+  loaded = this.vehicleService.loaded;
   inactiveCount = computed(() => this.vehicleService.inactiveVehicles().length);
+  currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
+  abs = Math.abs;
+
+  /** Ingresos y gastos del mes en curso por vehículo. */
+  monthStats = computed(() => {
+    const start = startOfMonth(new Date());
+    const end = endOfMonth(new Date());
+    const stats = new Map<string, { income: number; expense: number; net: number }>();
+    for (const t of this.transactionService.transactions()) {
+      const d = parseTxDate(t.date);
+      if (d < start || d > end) continue;
+      const s = stats.get(t.vehicleId) ?? { income: 0, expense: 0, net: 0 };
+      if (t.type === 'income') s.income += t.amount;
+      else s.expense += t.amount;
+      s.net = s.income - s.expense;
+      stats.set(t.vehicleId, s);
+    }
+    return stats;
+  });
+
+  statsOf(id: string) {
+    return this.monthStats().get(id) ?? { income: 0, expense: 0, net: 0 };
+  }
 
   isTransactionModalOpen = signal(false);
   isAddVehicleModalOpen = signal(false);
   editingVehicle = signal<Vehicle | null>(null);
   modalVehicleId = signal<string | null>(null);
   modalTransactionType = signal<'income' | 'expense' | null>(null);
-  modalVehicleAlias = signal<string | null>(null);
   deactivatingVehicle = signal<Vehicle | null>(null);
+
+  ngOnInit() {
+    // Llegar desde el inicio con ?nuevo=1 abre el formulario de vehículo.
+    if (this.route.snapshot.queryParamMap.get('nuevo')) {
+      this.openAddVehicleModal();
+    }
+  }
 
   addTransaction(vehicle: Vehicle, type: 'income' | 'expense') {
     if (vehicle.id) {
       this.modalVehicleId.set(vehicle.id);
       this.modalTransactionType.set(type);
-      this.modalVehicleAlias.set(vehicle.alias);
       this.isTransactionModalOpen.set(true);
     }
   }
@@ -88,7 +125,13 @@ export class VehiclesComponent {
   confirmDeactivate() {
     const vehicle = this.deactivatingVehicle();
     if (vehicle?.id) {
-      queueWrite(() => this.vehicleService.setActive(vehicle.id, false));
+      const id = vehicle.id;
+      if (queueWrite(() => this.vehicleService.setActive(id, false))) {
+        this.toast.show(`"${vehicle.alias}" desactivado`, {
+          actionLabel: 'Deshacer',
+          action: () => queueWrite(() => this.vehicleService.setActive(id, true)),
+        });
+      }
     }
     this.deactivatingVehicle.set(null);
   }

@@ -1,94 +1,158 @@
-<div class="space-y-4">
-  <!-- Date Filters -->
-  <div class="card p-3">
-    <div class="flex gap-2 items-end">
-      <div class="flex-1">
-        <label for="startDate" class="block text-xs font-medium text-secondary mb-1">Desde</label>
-        <input
-          type="date"
-          id="startDate"
-          [ngModel]="startDate()"
-          (ngModelChange)="startDate.set($event)"
-          class="w-full text-sm"
-        />
-      </div>
-      <div class="flex-1">
-        <label for="endDate" class="block text-xs font-medium text-secondary mb-1">Hasta</label>
-        <input
-          type="date"
-          id="endDate"
-          [ngModel]="endDate()"
-          (ngModelChange)="endDate.set($event)"
-          class="w-full text-sm"
-        />
-      </div>
-    </div>
-  </div>
-
-  <!-- Range Summary -->
-  <div class="card relative overflow-hidden">
-    <div
-      class="absolute inset-0 opacity-70 pointer-events-none"
-      style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 60%)"
-    ></div>
-    <div class="relative p-4 text-center">
-      <h2 class="text-sm font-semibold uppercase tracking-wide text-secondary">
-        Balance del Periodo
-      </h2>
-      <p
-        class="text-3xl font-extrabold mt-2"
-        style="color: var(--color-text)"
-        [class.text-success]="rangeSummary().balance >= 0"
-        [class.text-danger]="rangeSummary().balance < 0"
-      >
-        {{ currencySymbol() }}{{ rangeSummary().balance | number : '1.2-2' }}
-      </p>
-      <div class="flex justify-center gap-6 mt-4">
-        <div class="text-center">
-          <span class="block text-xs font-medium uppercase text-success">Ingresos</span>
-          <span class="font-bold text-success"
-            >{{ currencySymbol() }}{{ rangeSummary().income | number : '1.2-2' }}</span
-          >
-        </div>
-        <div class="text-center">
-          <span class="block text-xs font-medium uppercase text-danger">Gastos</span>
-          <span class="font-bold text-danger"
-            >{{ currencySymbol() }}{{ rangeSummary().expense | number : '1.2-2' }}</span
-          >
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Daily List -->
-  <div class="space-y-3">
-    <h3 class="text-sm font-semibold" style="color: var(--color-text)">Desglose Diario</h3>
-    <div class="space-y-2">
-      @for (day of dailyBreakdown(); track day.date.toISOString()) {
-        <div class="card py-3 px-4">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-sm font-medium capitalize" style="color: var(--color-text)">{{
-              formatDate(day.date.toISOString())
-            }}</span>
-            <span
-              class="text-sm font-bold"
-              [class.text-success]="day.balance >= 0"
-              [class.text-danger]="day.balance < 0"
-            >
-              {{ day.balance >= 0 ? '+' : '' }}{{ currencySymbol()
-              }}{{ day.balance | number : '1.2-2' }}
-            </span>
-          </div>
-          <div class="flex justify-between text-xs text-secondary px-1">
-            <span>Ing: {{ currencySymbol() }}{{ day.income | number : '1.2-2' }}</span>
-            <span>Gas: {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</span>
-          </div>
-        </div>
-      } @empty {
-        <div class="card text-center py-8 text-sm italic text-muted">
-          No hay registros en este rango de fechas.
-        </div>
+<div class="space-y-5">
+  <!-- Periodo -->
+  <section class="space-y-3">
+    <div class="chip-scroll chip-scroll-flush" role="group" aria-label="Periodo">
+      @for (p of presets; track p.id) {
+        <button type="button" class="chip" [class.is-active]="preset() === p.id" [attr.aria-pressed]="preset() === p.id" (click)="setPreset(p.id)">{{ p.label }}</button>
       }
     </div>
-  </div>
+
+    @if (preset() === 'custom') {
+      <div class="grid grid-cols-2 gap-3 animate-fade-in-fast">
+        <div>
+          <label for="startDate" class="field-label">Desde</label>
+          <input type="date" id="startDate" [ngModel]="startDate()" (ngModelChange)="setStart($event)" [max]="endDate()" />
+        </div>
+        <div>
+          <label for="endDate" class="field-label">Hasta</label>
+          <input type="date" id="endDate" [ngModel]="endDate()" (ngModelChange)="setEnd($event)" [min]="startDate()" />
+        </div>
+      </div>
+    }
+
+    @if (vehicleOptions().length > 1) {
+      <div class="chip-scroll chip-scroll-flush" role="group" aria-label="Filtrar por vehículo">
+        <button type="button" class="chip" [class.is-active]="vehicleFilter() === 'all'" (click)="vehicleFilter.set('all')">Todos los vehículos</button>
+        @for (v of vehicleOptions(); track v.id) {
+          <button type="button" class="chip" [class.is-active]="vehicleFilter() === v.id" (click)="vehicleFilter.set(v.id)">{{ v.alias }}</button>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Balance del periodo -->
+  <section class="card">
+    <p class="overline">Balance · {{ periodLabel() }}</p>
+    <p
+      class="t-hero mt-2"
+      [class.text-success]="summary().balance > 0"
+      [class.text-danger]="summary().balance < 0"
+      [style.color]="summary().balance === 0 ? 'var(--color-text)' : null"
+    >
+      {{ summary().balance < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(summary().balance) | number : '1.2-2' }}
+    </p>
+
+    <div class="grid grid-cols-2 gap-3 mt-5 pt-4" style="border-top: 1px solid var(--color-border)">
+      <div>
+        <p class="caption">Ingresos</p>
+        <p class="font-semibold t-amount text-success">{{ currencySymbol() }}{{ summary().income | number : '1.2-2' }}</p>
+      </div>
+      <div>
+        <p class="caption">Gastos</p>
+        <p class="font-semibold t-amount text-danger">{{ currencySymbol() }}{{ summary().expense | number : '1.2-2' }}</p>
+      </div>
+    </div>
+    @if (summary().count > 0) {
+      <p class="caption mt-4">
+        {{ summary().count }} {{ summary().count === 1 ? 'movimiento' : 'movimientos' }} en {{ summary().activeDays }}
+        {{ summary().activeDays === 1 ? 'día' : 'días' }} ·
+        Promedio por día activo: {{ summary().avgPerDay < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(summary().avgPerDay) | number : '1.2-2' }}
+      </p>
+    }
+  </section>
+
+  <!-- Gráfica -->
+  @if (summary().count > 0) {
+    <section class="card">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="section-title">Ingresos y gastos</h3>
+        <div class="flex items-center gap-3 caption">
+          <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full" style="background: var(--color-success)"></span>Ingresos</span>
+          <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full" style="background: var(--color-danger)"></span>Gastos</span>
+        </div>
+      </div>
+      <app-bar-chart [data]="chart()"></app-bar-chart>
+    </section>
+  }
+
+  <!-- Por vehículo -->
+  @if (byVehicle().length > 1) {
+    <section class="space-y-3">
+      <h3 class="section-title">Por vehículo</h3>
+      <div class="card card-flush list">
+        @for (v of byVehicle(); track v.id) {
+          <div class="px-4 py-3.5">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ v.alias }}</p>
+              <p class="text-sm font-semibold t-amount shrink-0" [class.text-success]="v.net > 0" [class.text-danger]="v.net < 0">
+                {{ v.net < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(v.net) | number : '1.2-2' }}
+              </p>
+            </div>
+            <div class="bar-track mt-2.5"><div class="bar-fill bar-fill-success" [style.width.%]="v.incomeShare"></div></div>
+            <p class="caption mt-1.5">Ingresos {{ currencySymbol() }}{{ v.income | number : '1.2-2' }} · Gastos {{ currencySymbol() }}{{ v.expense | number : '1.2-2' }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Desglose diario -->
+  <section class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="section-title">Desglose diario</h3>
+      @if (summary().count > 0) {
+        <button type="button" class="btn btn-secondary btn-sm" (click)="exportCsv()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3M12 4v11m0 0l-4-4m4 4l4-4"/></svg>
+          Exportar CSV
+        </button>
+      }
+    </div>
+
+    @for (day of days(); track day.key) {
+      <div class="card card-flush">
+        <button
+          type="button"
+          class="row w-full text-left"
+          (click)="toggleDay(day.key)"
+          [attr.aria-expanded]="expandedDays().has(day.key)"
+        >
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium" style="color: var(--color-text)">{{ dayLabel(day.date) }}</p>
+            <p class="caption">Ingresos {{ currencySymbol() }}{{ day.income | number : '1.2-2' }} · Gastos {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</p>
+          </div>
+          <p class="text-sm font-semibold t-amount shrink-0" [class.text-success]="day.balance >= 0" [class.text-danger]="day.balance < 0">
+            {{ day.balance >= 0 ? '+' : '−' }}{{ currencySymbol() }}{{ abs(day.balance) | number : '1.2-2' }}
+          </p>
+          <svg class="w-4 h-4 shrink-0 transition-transform" [style.transform]="expandedDays().has(day.key) ? 'rotate(180deg)' : 'none'" style="color: var(--color-text-muted)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/></svg>
+        </button>
+
+        @if (expandedDays().has(day.key)) {
+          <div class="list animate-fade-in-fast" style="border-top: 1px solid var(--color-border); background: var(--color-surface-alt)">
+            @for (tx of day.items; track tx.id) {
+              <div class="flex items-center gap-3 px-4 py-2.5">
+                <span class="tx-icon" [class.tx-icon-income]="tx.type === 'income'" [class.tx-icon-expense]="tx.type === 'expense'" style="width: 28px; height: 28px">
+                  <span class="text-xs font-bold">{{ tx.type === 'income' ? '+' : '−' }}</span>
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
+                  <p class="caption truncate">{{ tx.vehicleAlias }} · {{ timeLabel(tx.date) }}</p>
+                </div>
+                <p class="text-sm font-medium t-amount shrink-0" [class.text-success]="tx.type === 'income'" [class.text-danger]="tx.type === 'expense'">
+                  {{ currencySymbol() }}{{ tx.amount | number : '1.2-2' }}
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="card empty-state">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 20V10m7 10V4m7 16v-7" />
+        </svg>
+        <p class="font-medium" style="color: var(--color-text)">Sin registros en este periodo</p>
+        <p class="caption">Prueba con otro rango de fechas.</p>
+      </div>
+    }
+  </section>
 </div>

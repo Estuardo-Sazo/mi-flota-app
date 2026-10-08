@@ -1,27 +1,27 @@
-<div class="modal-overlay" (click)="onClose()">
-  <div class="modal-panel" (click)="$event.stopPropagation()">
-    <div class="flex items-center gap-3 mb-5">
-      <span class="avatar">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-      </span>
-      <h2 class="text-lg font-bold" style="color: var(--color-text)">
-        {{ vehicle ? 'Editar Vehículo' : 'Añadir Vehículo' }}
+<div class="sheet-overlay" (click)="onClose()">
+  <div class="sheet" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" [attr.aria-label]="vehicle ? 'Editar vehículo' : 'Añadir vehículo'">
+    <div class="sheet-handle"></div>
+
+    <div class="mb-5">
+      <h2 class="text-xl font-semibold tracking-tight" style="color: var(--color-text)">
+        {{ vehicle ? 'Editar vehículo' : 'Nuevo vehículo' }}
       </h2>
+      <p class="caption mt-1">Un nombre corto te ayuda a reconocerlo al registrar movimientos.</p>
     </div>
 
     <form (ngSubmit)="onPrimaryAction()" class="space-y-4">
       <div>
-        <label for="alias" class="field-label">Alias del Vehículo</label>
-        <input type="text" id="alias" name="alias" [(ngModel)]="alias" required placeholder="Ej. Tuk tuk">
+        <label for="alias" class="field-label">Nombre o alias</label>
+        <input type="text" id="alias" name="alias" [(ngModel)]="alias" required placeholder="Ej. Tuk tuk" autocomplete="off">
       </div>
       <div>
         <label for="placa" class="field-label">Placa</label>
-        <input type="text" id="placa" name="placa" [(ngModel)]="placa" required placeholder="Ej. P-123ABC">
+        <input type="text" id="placa" name="placa" [(ngModel)]="placa" required placeholder="Ej. M123ABC" autocomplete="off" autocapitalize="characters">
       </div>
 
-      <div class="flex justify-end space-x-2 pt-4">
+      <div class="grid gap-3 pt-2" style="grid-template-columns: auto 1fr">
         <button type="button" (click)="onClose()" class="btn btn-outline">Cancelar</button>
-        <button type="submit" class="btn btn-primary" [disabled]="!alias().trim() || !placa().trim()">{{ vehicle ? 'Actualizar' : 'Guardar' }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!alias().trim() || !placa().trim()">{{ vehicle ? 'Guardar cambios' : 'Agregar vehículo' }}</button>
       </div>
     </form>
   </div>

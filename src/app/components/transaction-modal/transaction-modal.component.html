@@ -1,70 +1,90 @@
-<div class="modal-overlay" (click)="onClose()">
-  <div class="modal-panel" (click)="$event.stopPropagation()">
-    <div class="flex items-center gap-3 mb-5">
-      <span class="tx-icon" [class.tx-icon-income]="type === 'income'" [class.tx-icon-expense]="type === 'expense'">
-        @if (type === 'income') {
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
-        } @else {
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
-        }
-      </span>
-      <div class="min-w-0">
-        <h2 class="text-lg font-bold leading-tight" style="color: var(--color-text)">
-          Añadir {{ type === 'income' ? 'Ingreso' : 'Gasto' }}
-        </h2>
-        @if (vehicleAlias) {
-          <p class="text-xs text-secondary truncate">{{ vehicleAlias }}</p>
-        }
-      </div>
+<div class="sheet-overlay" (click)="onClose()">
+  <div class="sheet" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Registrar movimiento">
+    <div class="sheet-handle"></div>
+
+    <div class="segmented mb-5" role="group" aria-label="Tipo de movimiento">
+      <button type="button" class="income" [class.is-active]="selectedType() === 'income'" [attr.aria-pressed]="selectedType() === 'income'" (click)="setType('income')">Ingreso</button>
+      <button type="button" class="expense" [class.is-active]="selectedType() === 'expense'" [attr.aria-pressed]="selectedType() === 'expense'" (click)="setType('expense')">Gasto</button>
     </div>
 
-    <form (ngSubmit)="onSave()" class="space-y-4">
+    <form (ngSubmit)="onSave()" class="space-y-5">
       <div>
         <label for="amount" class="field-label">Monto</label>
         <div class="input-group">
-          <span class="input-prefix">{{ currencySymbol() }}</span>
+          <span class="input-prefix prefix-lg">{{ currencySymbol() }}</span>
           <input
+            #amountInput
+            class="input-amount"
             type="number"
             id="amount"
             name="amount"
-            [(ngModel)]="amount"
+            [ngModel]="amount()"
+            (ngModelChange)="amount.set($event)"
             required
             inputmode="decimal"
-            pattern="[0-9]*"
             step="0.01"
             min="0"
             placeholder="0.00"
+            autocomplete="off"
           />
         </div>
       </div>
 
       <div>
-        <label for="description" class="field-label">Descripción</label>
+        <span class="field-label">Vehículo</span>
+        <div class="chip-scroll" role="group" aria-label="Vehículo">
+          @for (v of vehicles(); track v.id) {
+            <button type="button" class="chip" [class.is-active]="selectedVehicleId() === v.id" [attr.aria-pressed]="selectedVehicleId() === v.id" (click)="selectedVehicleId.set(v.id)">{{ v.alias }}</button>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label for="description" class="field-label">Concepto</label>
+        <div class="chip-scroll mb-2" role="group" aria-label="Conceptos sugeridos">
+          @for (c of concepts(); track c) {
+            <button type="button" class="chip" [class.is-active]="description().trim().toLowerCase() === c.toLowerCase()" (click)="description.set(c)">{{ c }}</button>
+          }
+        </div>
         <input
           type="text"
           id="description"
           name="description"
-          [(ngModel)]="description"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
           required
-          placeholder="Ej. Combustible, viaje al centro..."
+          placeholder="Ej. Viaje al centro"
+          autocomplete="off"
         />
       </div>
 
       <div>
-        <label for="date" class="field-label">Fecha</label>
+        <span class="field-label">Fecha y hora</span>
+        <div class="flex gap-2 mb-2">
+          <button type="button" class="chip" (click)="setDate('now')">Ahora</button>
+          <button type="button" class="chip" (click)="setDate('yesterday')">Ayer</button>
+        </div>
         <input
           type="datetime-local"
           id="date"
           name="date"
-          [(ngModel)]="date"
+          aria-label="Fecha y hora"
+          [ngModel]="date()"
+          (ngModelChange)="date.set($event)"
           required
         />
       </div>
 
-      <div class="flex justify-end space-x-2 pt-4">
+      <div class="grid gap-3 pt-1" style="grid-template-columns: auto 1fr">
         <button type="button" (click)="onClose()" class="btn btn-outline">Cancelar</button>
-        <button type="submit" class="btn" [class.btn-success]="type === 'income'" [class.btn-danger]="type === 'expense'" [disabled]="!amount() || !description()">
-          Guardar
+        <button
+          type="submit"
+          class="btn"
+          [class.btn-success]="selectedType() === 'income'"
+          [class.btn-danger]="selectedType() === 'expense'"
+          [disabled]="!canSave()"
+        >
+          Guardar {{ selectedType() === 'income' ? 'ingreso' : 'gasto' }}
         </button>
       </div>
     </form>

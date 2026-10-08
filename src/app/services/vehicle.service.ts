@@ -21,6 +21,9 @@ export class VehicleService {
   private syncStatus = inject(SyncStatusService);
 
   private _vehicles = signal<Vehicle[]>([]);
+  private _loaded = signal(false);
+  /** true cuando ya llegó la primera lectura (caché local o servidor); evita mostrar "vacío" mientras carga. */
+  readonly loaded = this._loaded.asReadonly();
   /** Todos los vehículos, incluyendo desactivados (para resolver alias en registros históricos). */
   readonly vehicles = this._vehicles.asReadonly();
   readonly activeVehicles = computed(() => this._vehicles().filter((v) => v.active !== false));
@@ -46,6 +49,7 @@ export class VehicleService {
       const col = collection(this.firestore, vehiclesPath(uid));
       const unsubscribe = onSnapshot(col, { includeMetadataChanges: true }, (snap) => {
         this._vehicles.set(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Vehicle));
+        this._loaded.set(true);
         this.syncStatus.reportSourceMetadata('vehicles', {
           fromCache: snap.metadata.fromCache,
           hasPendingWrites: snap.metadata.hasPendingWrites

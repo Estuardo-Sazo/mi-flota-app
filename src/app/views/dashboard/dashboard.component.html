@@ -1,154 +1,193 @@
-<div class="space-y-5">
-  <!-- Selector Mes -->
-  <div class="flex items-center justify-between px-1">
-    <button class="badge hover:opacity-75 transition-opacity" (click)="prevMonth()" aria-label="Mes anterior">
-      ◀
-    </button>
-    <span class="text-sm font-semibold tracking-wide select-none" style="color: var(--color-text)">{{
-      monthLabel() | titlecase
-    }}</span>
-    <button
-      class="badge hover:opacity-75 transition-opacity"
-      (click)="nextMonth()"
-      [disabled]="isCurrentMonth()"
-      aria-label="Mes siguiente"
-    >
-      ▶
-    </button>
+@if (!vehiclesLoaded()) {
+  <!-- Cargando -->
+  <div class="space-y-4" aria-busy="true">
+    <div class="skeleton" style="height: 44px"></div>
+    <div class="skeleton" style="height: 170px"></div>
+    <div class="skeleton" style="height: 190px"></div>
   </div>
+} @else if (!hasVehicles()) {
+  <!-- Primer uso -->
+  <section class="card space-y-5">
+    <div>
+      <p class="overline">Bienvenido a Mi flota</p>
+      <h2 class="text-xl font-semibold tracking-tight mt-1" style="color: var(--color-text)">
+        {{ onlyInactiveVehicles() ? 'No tienes vehículos activos' : 'Empecemos por tu primer vehículo' }}
+      </h2>
+      <p class="caption mt-2">
+        {{ onlyInactiveVehicles()
+          ? 'Reactiva uno desde la lista de desactivados o agrega un vehículo nuevo.'
+          : 'Registra tus ingresos y gastos en segundos. Funciona sin internet y se sincroniza cuando vuelvas a tener conexión.' }}
+      </p>
+    </div>
+    @if (!onlyInactiveVehicles()) {
+      <ol class="space-y-3">
+        <li class="flex items-start gap-3"><span class="avatar avatar-muted" style="width: 32px; height: 32px; font-size: .875rem">1</span><p class="text-sm pt-1" style="color: var(--color-text)">Agrega tu vehículo (nombre y placa).</p></li>
+        <li class="flex items-start gap-3"><span class="avatar avatar-muted" style="width: 32px; height: 32px; font-size: .875rem">2</span><p class="text-sm pt-1" style="color: var(--color-text)">Registra cada viaje (ingreso) o gasto con el botón <strong>Registrar</strong>.</p></li>
+        <li class="flex items-start gap-3"><span class="avatar avatar-muted" style="width: 32px; height: 32px; font-size: .875rem">3</span><p class="text-sm pt-1" style="color: var(--color-text)">Revisa tu ganancia por día, semana y mes.</p></li>
+      </ol>
+    }
+    <a routerLink="/vehiculos" [queryParams]="{ nuevo: 1 }" class="btn btn-primary btn-block">
+      {{ onlyInactiveVehicles() ? 'Ir a mi flota' : 'Agregar mi primer vehículo' }}
+    </a>
+  </section>
+} @else {
+  <div class="space-y-5">
+    <!-- Selector de mes -->
+    <div class="flex items-center justify-between">
+      <button type="button" class="icon-btn" (click)="prevMonth()" aria-label="Mes anterior">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <h2 class="section-title">{{ monthLabel() | titlecase }}</h2>
+      <button type="button" class="icon-btn" (click)="nextMonth()" [disabled]="isCurrentMonth()" [style.opacity]="isCurrentMonth() ? 0.3 : 1" aria-label="Mes siguiente">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
 
-  <!-- Métrica principal -->
-  <div class="card relative overflow-hidden">
-    <div
-      class="absolute inset-0 opacity-70 pointer-events-none"
-      style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 60%)"
-    ></div>
-    <div class="relative">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="title-sm">Ganancia Neta (Mes)</h2>
-        <span
-          class="badge"
-          [class.badge-green]="netEarnings() >= 0"
-          [class.badge-red]="netEarnings() < 0"
-          >{{ netEarnings() >= 0 ? 'Positivo' : 'Negativo' }}</span
-        >
+    <!-- Ganancia neta -->
+    <section class="card">
+      <div class="flex items-start justify-between gap-3">
+        <p class="overline">Ganancia neta</p>
+        @if (comparison(); as c) {
+          <span class="badge" [class.badge-green]="c.delta >= 0" [class.badge-red]="c.delta < 0">
+            {{ c.delta >= 0 ? '▲' : '▼' }} {{ currencySymbol() }}{{ abs(c.delta) | number : '1.2-2' }} vs {{ c.label }}
+          </span>
+        }
       </div>
-      <p class="text-4xl font-extrabold tracking-tight" style="color: var(--color-text)">
-        {{ currencySymbol() }}{{ netEarnings() | number : '1.2-2' }}
+      <p
+        class="t-hero mt-2"
+        [class.text-success]="netEarnings() > 0"
+        [class.text-danger]="netEarnings() < 0"
+        [style.color]="netEarnings() === 0 ? 'var(--color-text)' : null"
+      >
+        {{ netEarnings() < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(netEarnings()) | number : '1.2-2' }}
       </p>
-      <p class="mt-1 text-xs text-secondary">Resumen de ingresos y gastos del mes actual.</p>
-    </div>
-  </div>
 
-  <!-- Tarjetas secundarias -->
-  <div class="grid grid-cols-2 gap-4">
-    <div class="card p-4 surface-success">
-      <h3 class="text-xs font-semibold uppercase tracking-wide text-success">Ingresos</h3>
-      <p class="mt-1 text-2xl font-bold text-success">
-        {{ currencySymbol() }}{{ monthlyIncome() | number : '1.2-2' }}
-      </p>
-    </div>
-    <div class="card p-4 surface-danger">
-      <h3 class="text-xs font-semibold uppercase tracking-wide text-danger">Gastos</h3>
-      <p class="mt-1 text-2xl font-bold text-danger">
-        {{ currencySymbol() }}{{ monthlyExpenses() | number : '1.2-2' }}
-      </p>
-    </div>
-  </div>
-
-  <!-- Resumen Diario -->
-  <div class="space-y-3">
-    <div class="flex items-center justify-between">
-      <h3 class="text-sm font-semibold" style="color: var(--color-text)">Resumen Diario</h3>
-      <span class="text-[11px] text-muted">Últimos 3 días</span>
-    </div>
-    <div class="space-y-2">
-      @for (day of recentDailySummaries(); track day.date.toISOString()) {
-        <div class="card py-3 px-4">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-sm font-medium" style="color: var(--color-text)">{{
-              formatDate(day.date.toISOString())
-            }}</span>
-            <span
-              class="text-sm font-bold"
-              [class.text-success]="day.balance >= 0"
-              [class.text-danger]="day.balance < 0"
-            >
-              {{ day.balance >= 0 ? '+' : '' }}{{ currencySymbol()
-              }}{{ day.balance | number : '1.2-2' }}
-            </span>
-          </div>
-          <div class="flex justify-between text-xs text-secondary">
-            <span>Ingresos: {{ currencySymbol() }}{{ day.income | number : '1.2-2' }}</span>
-            <span>Gastos: {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</span>
-          </div>
-        </div>
-      } @empty {
-        <div class="card text-center py-6 text-sm text-secondary">
-          No hay movimientos este mes.
-        </div>
-      }
-    </div>
-  </div>
-
-  <!-- Registros recientes -->
-  <div class="space-y-3">
-    <div class="flex items-center justify-between">
-      <h3 class="text-sm font-semibold" style="color: var(--color-text)">Recientes</h3>
-      <span class="text-[11px] text-muted">Últimos 10</span>
-    </div>
-    <div class="space-y-2">
-      @for (tx of recentTransactions(); track tx.id) {
-        <div class="card flex items-center justify-between py-3 px-4">
+      <div class="grid grid-cols-2 gap-3 mt-5 pt-4" style="border-top: 1px solid var(--color-border)">
+        <div class="flex items-center gap-2.5">
+          <span class="tx-icon tx-icon-income" style="width: 34px; height: 34px">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+          </span>
           <div class="min-w-0">
-            <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
-            <p class="text-[11px] tracking-wide text-secondary">{{ formatDate(tx.date) }}</p>
+            <p class="caption">Ingresos</p>
+            <p class="font-semibold t-amount truncate" style="color: var(--color-text)">{{ currencySymbol() }}{{ monthlyIncome() | number : '1.2-2' }}</p>
           </div>
-          <p
-            class="text-sm font-semibold tabular-nums shrink-0"
-            [class.text-success]="tx.type === 'income'"
-            [class.text-danger]="tx.type === 'expense'"
-          >
-            {{ tx.type === 'income' ? '+' : '-' }}{{ currencySymbol()
-            }}{{ tx.amount | number : '1.2-2' }}
-          </p>
         </div>
-      } @empty {
-        <div class="card text-center py-6 text-sm text-secondary">
-          No hay registros recientes.
+        <div class="flex items-center gap-2.5">
+          <span class="tx-icon tx-icon-expense" style="width: 34px; height: 34px">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+          </span>
+          <div class="min-w-0">
+            <p class="caption">Gastos</p>
+            <p class="font-semibold t-amount truncate" style="color: var(--color-text)">{{ currencySymbol() }}{{ monthlyExpenses() | number : '1.2-2' }}</p>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Últimos 7 días -->
+    <section class="card">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="section-title">Últimos 7 días</h3>
+        <div class="flex items-center gap-3 caption">
+          <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full" style="background: var(--color-success)"></span>Ingresos</span>
+          <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2 h-2 rounded-full" style="background: var(--color-danger)"></span>Gastos</span>
+        </div>
+      </div>
+      @if (weekHasData()) {
+        <app-bar-chart [data]="weekChart()"></app-bar-chart>
+      } @else {
+        <p class="caption text-center py-8">Sin movimientos en estos días.</p>
       }
-    </div>
+    </section>
+
+    <!-- Por vehículo -->
+    @if (byVehicle().length > 1) {
+      <section class="space-y-3">
+        <h3 class="section-title">Por vehículo</h3>
+        <div class="card card-flush list">
+          @for (v of byVehicle(); track v.id) {
+            <div class="px-4 py-3.5">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ v.alias }}</p>
+                <p class="text-sm font-semibold t-amount shrink-0" [class.text-success]="v.net > 0" [class.text-danger]="v.net < 0">
+                  {{ v.net < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(v.net) | number : '1.2-2' }}
+                </p>
+              </div>
+              <div class="bar-track mt-2.5"><div class="bar-fill bar-fill-success" [style.width.%]="v.incomeShare"></div></div>
+              <p class="caption mt-1.5">Ingresos {{ currencySymbol() }}{{ v.income | number : '1.2-2' }} · Gastos {{ currencySymbol() }}{{ v.expense | number : '1.2-2' }}</p>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Resumen diario -->
+    <section class="space-y-3">
+      <div class="flex items-baseline justify-between">
+        <h3 class="section-title">Resumen diario</h3>
+        <span class="caption">Últimos 3 días</span>
+      </div>
+      <div class="card card-flush list">
+        @for (day of recentDailySummaries(); track day.date.toISOString()) {
+          <div class="row">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium" style="color: var(--color-text)">{{ dayLabel(day.date) }}</p>
+              <p class="caption">Ingresos {{ currencySymbol() }}{{ day.income | number : '1.2-2' }} · Gastos {{ currencySymbol() }}{{ day.expense | number : '1.2-2' }}</p>
+            </div>
+            <p class="text-sm font-semibold t-amount shrink-0" [class.text-success]="day.balance >= 0" [class.text-danger]="day.balance < 0">
+              {{ day.balance >= 0 ? '+' : '−' }}{{ currencySymbol() }}{{ abs(day.balance) | number : '1.2-2' }}
+            </p>
+          </div>
+        } @empty {
+          <p class="caption text-center py-6">No hay movimientos este mes.</p>
+        }
+      </div>
+    </section>
+
+    <!-- Recientes -->
+    <section class="space-y-3">
+      <div class="flex items-baseline justify-between">
+        <h3 class="section-title">Recientes</h3>
+        <a routerLink="/registros" class="text-sm font-medium" style="color: var(--color-primary)">Ver todos</a>
+      </div>
+      <div class="card card-flush list">
+        @for (tx of recentTransactions(); track tx.id) {
+          <div class="row">
+            <span class="tx-icon" [class.tx-icon-income]="tx.type === 'income'" [class.tx-icon-expense]="tx.type === 'expense'">
+              @if (tx.type === 'income') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.25" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+              }
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ tx.description || 'Sin descripción' }}</p>
+              <p class="caption truncate">{{ tx.vehicleAlias }} · {{ timeLabel(tx.date) }}</p>
+            </div>
+            <p class="text-sm font-semibold t-amount shrink-0" [class.text-success]="tx.type === 'income'" [class.text-danger]="tx.type === 'expense'">
+              {{ tx.type === 'income' ? '+' : '−' }}{{ currencySymbol() }}{{ tx.amount | number : '1.2-2' }}
+            </p>
+          </div>
+        } @empty {
+          <div class="empty-state">
+            <p class="font-medium" style="color: var(--color-text)">Aún no hay registros</p>
+            <p class="caption">Toca <strong>Registrar</strong> para anotar tu primer movimiento.</p>
+          </div>
+        }
+      </div>
+    </section>
   </div>
-</div>
 
-<!-- Acción rápida: agregar ingreso/gasto sin ir a Flota -->
-@if (quickActionOpen()) {
-  <div class="fixed inset-0 z-40" (click)="quickActionOpen.set(false)"></div>
-}
-<div class="fab flex flex-col items-end gap-3 z-50">
-  @if (quickActionOpen()) {
-    <button (click)="openQuickTransaction('income')" class="speed-dial-chip action-chip-success animate-fade-in-fast" style="background: var(--color-surface)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
-      Ingreso
-    </button>
-    <button (click)="openQuickTransaction('expense')" class="speed-dial-chip action-chip-danger animate-fade-in-fast" style="background: var(--color-surface)">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
-      Gasto
-    </button>
-  }
-  <button (click)="toggleQuickAction()" class="fab-btn" [class.rotate-45]="quickActionOpen()" aria-label="Agregar movimiento rápido">
-    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+  <!-- Registro rápido -->
+  <button type="button" class="fab" (click)="openQuickTransaction()" aria-label="Registrar ingreso o gasto">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m-7-7h14"/></svg>
+    Registrar
   </button>
-</div>
 
-@if (isTransactionModalOpen()) {
-  <app-transaction-modal
-    [vehicleId]="modalVehicleId()"
-    [type]="modalTransactionType()"
-    [vehicleAlias]="modalVehicleAlias()"
-    [defaultDescription]="modalDefaultDescription()"
-    (close)="closeTransactionModal()"
-    (save)="saveTransaction($event)"
-  ></app-transaction-modal>
+  @if (isTransactionModalOpen()) {
+    <app-transaction-modal
+      (close)="closeTransactionModal()"
+      (save)="saveTransaction($event)"
+    ></app-transaction-modal>
+  }
 }

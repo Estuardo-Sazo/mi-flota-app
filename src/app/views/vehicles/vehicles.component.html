@@ -1,58 +1,85 @@
-<div class="flex items-center justify-between px-1">
-  <p class="text-xs text-secondary">{{ vehicles().length }} vehículo(s) activo(s)</p>
-  <a routerLink="/vehiculos/desactivados" class="text-xs font-medium" style="color: var(--color-primary)">
-    Desactivados @if (inactiveCount() > 0) {<span>({{ inactiveCount() }})</span>}
-  </a>
-</div>
+@if (loaded()) {
+  <div class="flex items-center justify-between px-1">
+    <p class="caption">{{ vehicles().length }} {{ vehicles().length === 1 ? 'vehículo activo' : 'vehículos activos' }}</p>
+    <a routerLink="/vehiculos/desactivados" class="text-sm font-medium inline-flex items-center min-h-[44px]" style="color: var(--color-primary)">
+      Desactivados@if (inactiveCount() > 0) { ({{ inactiveCount() }})}
+    </a>
+  </div>
 
-<div class="space-y-3">
-  @for (vehicle of vehicles(); track vehicle.id) {
-    <div class="card">
-      <div class="flex items-center gap-3">
-        <span class="avatar">{{ vehicle.alias.charAt(0).toUpperCase() }}</span>
-        <div class="min-w-0 flex-1">
-          <p class="text-base font-semibold tracking-tight truncate" style="color: var(--color-text)">{{ vehicle.alias }}</p>
-          <p class="text-[11px] font-medium uppercase tracking-wide" style="color: var(--color-text-muted)">{{ vehicle.placa }}</p>
+  <div class="space-y-3 -mt-2">
+    @for (vehicle of vehicles(); track vehicle.id) {
+      <article class="card">
+        <div class="flex items-center gap-3">
+          <span class="avatar">{{ vehicle.alias.charAt(0).toUpperCase() }}</span>
+          <div class="min-w-0 flex-1">
+            <h3 class="text-base font-semibold tracking-tight truncate" style="color: var(--color-text)">{{ vehicle.alias }}</h3>
+            <p class="caption uppercase tracking-wide">{{ vehicle.placa }}</p>
+          </div>
+          <button type="button" (click)="startEdit(vehicle)" class="icon-btn" aria-label="Editar {{ vehicle.alias }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button type="button" (click)="askDeactivate(vehicle)" class="icon-btn icon-btn-danger" aria-label="Desactivar {{ vehicle.alias }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M18.36 6.64a9 9 0 11-12.73 0M12 3v9"/></svg>
+          </button>
         </div>
-        <button (click)="startEdit(vehicle)" class="icon-btn" title="Editar" aria-label="Editar vehículo">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-        </button>
-        <button (click)="askDeactivate(vehicle)" class="icon-btn icon-btn-danger" title="Desactivar" aria-label="Desactivar vehículo">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.36 6.64a9 9 0 11-12.73 0M12 3v9"/></svg>
-        </button>
-      </div>
-      <div class="flex gap-2 mt-3">
-        <button (click)="addTransaction(vehicle, 'income')" class="action-chip action-chip-success flex-1 justify-center">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
-          Ingreso
-        </button>
-        <button (click)="addTransaction(vehicle, 'expense')" class="action-chip action-chip-danger flex-1 justify-center">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
-          Gasto
-        </button>
-      </div>
-    </div>
-  } @empty {
-    <div class="card empty-state">
-      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-      <p class="font-medium" style="color: var(--color-text)">No hay vehículos registrados.</p>
-      <p class="text-xs">Añade tu primer vehículo para empezar.</p>
-    </div>
-  }
-</div>
 
-<!-- FAB -->
-<button (click)="openAddVehicleModal()" class="fab fab-btn" aria-label="Agregar vehículo">
-  <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-</button>
+        <div class="grid grid-cols-3 gap-2 mt-4 pt-3" style="border-top: 1px solid var(--color-border)">
+          <div class="min-w-0">
+            <p class="caption">Ingresos</p>
+            <p class="text-sm font-semibold t-amount truncate" style="color: var(--color-text)">{{ currencySymbol() }}{{ statsOf(vehicle.id).income | number : '1.2-2' }}</p>
+          </div>
+          <div class="min-w-0">
+            <p class="caption">Gastos</p>
+            <p class="text-sm font-semibold t-amount truncate" style="color: var(--color-text)">{{ currencySymbol() }}{{ statsOf(vehicle.id).expense | number : '1.2-2' }}</p>
+          </div>
+          <div class="min-w-0">
+            <p class="caption">Neto del mes</p>
+            <p class="text-sm font-semibold t-amount truncate" [class.text-success]="statsOf(vehicle.id).net > 0" [class.text-danger]="statsOf(vehicle.id).net < 0" [style.color]="statsOf(vehicle.id).net === 0 ? 'var(--color-text)' : null">
+              {{ statsOf(vehicle.id).net < 0 ? '−' : '' }}{{ currencySymbol() }}{{ abs(statsOf(vehicle.id).net) | number : '1.2-2' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <button type="button" (click)="addTransaction(vehicle, 'income')" class="action-chip action-chip-success">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19V5m0 0l-6 6m6-6l6 6"/></svg>
+            Ingreso
+          </button>
+          <button type="button" (click)="addTransaction(vehicle, 'expense')" class="action-chip action-chip-danger">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m0 0l-6-6m6 6l6-6"/></svg>
+            Gasto
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <div class="card empty-state">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16V9a1 1 0 011-1h9l4 4h1a1 1 0 011 1v3M4 16h1m14 0h-1M4 16a2 2 0 104 0m0 0h6m0 0a2 2 0 104 0" />
+        </svg>
+        <p class="font-medium" style="color: var(--color-text)">Todavía no tienes vehículos</p>
+        <p class="caption">Agrega el primero para empezar a registrar ingresos y gastos.</p>
+        <button type="button" class="btn btn-primary mt-3" (click)="openAddVehicleModal()">Agregar vehículo</button>
+      </div>
+    }
+  </div>
+
+  @if (vehicles().length > 0) {
+    <button type="button" (click)="openAddVehicleModal()" class="fab" aria-label="Agregar vehículo">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 5v14m-7-7h14"/></svg>
+      Vehículo
+    </button>
+  }
+} @else {
+  <div class="space-y-3" aria-busy="true">
+    <div class="skeleton" style="height: 190px"></div>
+    <div class="skeleton" style="height: 190px"></div>
+  </div>
+}
 
 @if (isTransactionModalOpen()) {
   <app-transaction-modal
     [vehicleId]="modalVehicleId()"
     [type]="modalTransactionType()"
-    [vehicleAlias]="modalVehicleAlias()"
     (close)="closeTransactionModal()"
     (save)="saveTransaction($event)"
   ></app-transaction-modal>

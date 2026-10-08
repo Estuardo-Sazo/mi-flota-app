@@ -1,193 +1,154 @@
-<div class="space-y-7">
-  <div>
-    <h2 class="title-lg">Ajustes</h2>
-    <p class="text-xs text-secondary mt-1">Preferencias de visualización y mantenimiento.</p>
-  </div>
-
-  <!-- Sección Apariencia -->
-  <section class="card space-y-3">
-    <div>
-      <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Apariencia</h3>
-      <p class="text-[11px] text-secondary mt-0.5">Elige cómo se ve la aplicación.</p>
+<div class="space-y-6">
+  <!-- Apariencia -->
+  <section class="space-y-3">
+    <h3 class="overline px-1">Apariencia</h3>
+    <div class="card space-y-4">
+      <div>
+        <p class="field-label">Tema</p>
+        <div class="segmented" role="group" aria-label="Tema de la aplicación">
+          @for (opt of themeOptions; track opt.value) {
+            <button type="button" [class.is-active]="theme.preference() === opt.value" [attr.aria-pressed]="theme.preference() === opt.value" (click)="theme.setPreference(opt.value)">{{ opt.label }}</button>
+          }
+        </div>
+      </div>
+      <div>
+        <label for="currency" class="field-label">Moneda</label>
+        <select id="currency" [ngModel]="currencySymbol()" (ngModelChange)="currencySymbol.set($event)">
+          @for (currency of currencies; track currency.symbol) {
+            <option [value]="currency.symbol">{{ currency.name }} ({{ currency.symbol }})</option>
+          }
+        </select>
+      </div>
     </div>
-    <div class="grid grid-cols-3 gap-2">
-      @for (opt of themeOptions; track opt.value) {
-        <button
-          type="button"
-          (click)="theme.setPreference(opt.value)"
-          class="rounded-xl py-2 text-xs font-medium transition-colors border"
-          [style.borderColor]="theme.preference() === opt.value ? 'var(--color-primary)' : 'var(--color-border)'"
-          [style.color]="theme.preference() === opt.value ? 'var(--color-primary)' : 'var(--color-text-secondary)'"
-          [style.background]="theme.preference() === opt.value ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'transparent'"
-        >
-          {{ opt.label }}
-        </button>
+  </section>
+
+  <!-- Recordatorios -->
+  <section class="space-y-3">
+    <h3 class="overline px-1">Recordatorios</h3>
+    <div class="card space-y-4">
+      <label class="flex items-center justify-between gap-4 cursor-pointer select-none">
+        <span class="min-w-0">
+          <span class="block text-sm font-medium" style="color: var(--color-text)">Recordatorio diario</span>
+          <span class="block caption">Un aviso a la hora que elijas para no olvidar registrar tus movimientos.</span>
+        </span>
+        <span class="relative inline-flex items-center">
+          <input type="checkbox" class="sr-only peer" [ngModel]="notificationsEnabled()" (ngModelChange)="notificationsEnabled.set($event)" aria-label="Activar recordatorio diario">
+          <span class="switch-toggle"></span>
+        </span>
+      </label>
+
+      @if (notificationsEnabled()) {
+        <div class="space-y-4 pt-4 animate-fade-in-fast" style="border-top: 1px solid var(--color-border)">
+          <div>
+            <label for="reminderTime" class="field-label">Hora</label>
+            <input type="time" id="reminderTime" [(ngModel)]="reminderTime" />
+          </div>
+          <div>
+            <label for="reminderTitle" class="field-label">Título</label>
+            <input type="text" id="reminderTitle" [(ngModel)]="reminderTitle" maxlength="60" />
+          </div>
+          <div>
+            <label for="reminderBody" class="field-label">Mensaje</label>
+            <textarea id="reminderBody" [(ngModel)]="reminderBody" maxlength="140" rows="2" class="resize-none"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" class="btn btn-primary" (click)="scheduleReminder()">Programar</button>
+            <button type="button" class="btn btn-secondary" (click)="testNow()" [disabled]="testingNotification">
+              @if (!testingNotification) { Probar ahora } @else { <span class="inline-flex items-center gap-2"><span class="loader-dot"></span>Enviando</span> }
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-4" style="border-top: 1px solid var(--color-border)">
+          <div class="flex items-center justify-between mb-2">
+            <p class="field-label !mb-0">Programados</p>
+            @if (activeReminders().length) {
+              <button type="button" class="btn btn-ghost btn-sm" (click)="clearReminders()">Quitar todos</button>
+            }
+          </div>
+          @for (r of activeReminders(); track r.id) {
+            <div class="flex items-center gap-3 py-2">
+              <span class="badge" style="font-variant-numeric: tabular-nums">{{ r.hour.toString().padStart(2, '0') }}:{{ r.minute.toString().padStart(2, '0') }}</span>
+              <span class="min-w-0 flex-1 text-sm truncate" style="color: var(--color-text)">{{ r.title }}</span>
+              <button type="button" class="icon-btn icon-btn-danger" (click)="removeReminder(r.id)" aria-label="Eliminar recordatorio">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          } @empty {
+            <p class="caption">No hay recordatorios programados.</p>
+          }
+        </div>
       }
     </div>
   </section>
 
-  <!-- Sección Moneda -->
-  <section class="card space-y-3">
-    <div class="flex items-start justify-between">
-      <div>
-        <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Moneda</h3>
-        <p class="text-[11px] text-secondary mt-0.5">Selecciona el símbolo que se mostrará en los montos.</p>
-      </div>
-    </div>
-    <div>
-      <label for="currency" class="sr-only">Símbolo de Moneda</label>
-      <select id="currency" [ngModel]="currencySymbol()" (ngModelChange)="currencySymbol.set($event)" class="w-full text-sm">
-        @for (currency of currencies; track currency.symbol) {
-          <option [value]="currency.symbol">
-            {{ currency.name }} ({{ currency.symbol }})
-          </option>
-        }
-      </select>
-    </div>
-  </section>
-
-  <!-- Sección Recordatorios -->
-  <section class="card space-y-5 reminders-card">
-    <div class="flex items-start justify-between gap-4 flex-wrap">
-      <div class="min-w-[200px]">
-        <h3 class="text-sm font-semibold tracking-wide flex items-center gap-2" style="color: var(--color-text)">
-          <span class="inline-flex w-6 h-6 items-center justify-center rounded-lg text-xs font-bold" style="background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary)">⏰</span>
-          Recordatorios diarios
-        </h3>
-        <p class="text-[11px] text-secondary mt-1 leading-relaxed">Recibe una notificación a la hora elegida para no olvidar registrar ingresos o gastos.</p>
-      </div>
-      <label class="relative inline-flex items-center cursor-pointer select-none mt-1">
-        <input type="checkbox" class="sr-only peer" [ngModel]="notificationsEnabled()" (ngModelChange)="notificationsEnabled.set($event)">
-        <div class="switch-toggle"></div>
-        <span class="ml-2 text-xs font-medium" [style.color]="notificationsEnabled() ? 'var(--color-primary)' : 'var(--color-text-secondary)'">{{ notificationsEnabled() ? 'Activado' : 'Desactivado' }}</span>
-      </label>
-    </div>
-
-    @if (notificationsEnabled()) {
-      <div class="space-y-5 animate-fade-in-fast">
-        <!-- Formulario simplificado -->
-        <div class="reminder-form-clean">
-          <div class="rf-row">
-            <label class="rf-label">Hora</label>
-            <div class="flex items-center gap-3 w-full max-w-[180px]">
-              <input type="time" [(ngModel)]="reminderTime" class="input w-full" />
-              <button type="button" (click)="scheduleReminder()" class="btn-primary !h-9 px-3">Programar</button>
-            </div>
-          </div>
-          <div class="rf-row">
-            <label class="rf-label">Título</label>
-            <input [(ngModel)]="reminderTitle" maxlength="60" class="input flex-1" />
-          </div>
-          <div class="rf-row">
-            <label class="rf-label">Mensaje</label>
-              <textarea [(ngModel)]="reminderBody" maxlength="140" rows="2" class="input flex-1 resize-none"></textarea>
-          </div>
-          <div class="rf-row actions">
-            <label class="rf-label">Acciones</label>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" class="btn-secondary !h-9 relative" (click)="testNow()" [disabled]="testingNotification">
-                @if (!testingNotification) {
-                  <span>Probar ahora</span>
-                } @else {
-                  <span class="inline-flex items-center gap-1">
-                    <span class="loader-dot"></span>
-                    Enviando
-                  </span>
-                }
-              </button>
-              @if (activeReminders().length) {
-                <button type="button" class="btn-secondary !h-9" (click)="clearReminders()">Limpiar</button>
-              }
-            </div>
-          </div>
+  <!-- Cuenta -->
+  <section class="space-y-3">
+    <h3 class="overline px-1">Cuenta y respaldo</h3>
+    <div class="card space-y-4">
+      @if (auth.isAnonymous()) {
+        <div>
+          <p class="text-sm font-medium" style="color: var(--color-text)">Tus datos están guardados en este dispositivo y en la nube</p>
+          <p class="caption mt-1">Conecta tu cuenta de Google para ver tus datos en otro celular y no perderlos si cambias de teléfono.</p>
         </div>
-
-        <!-- Lista de recordatorios -->
-        @if (activeReminders().length) {
-          <div class="space-y-2">
-            <div class="reminder-list-header">
-              <span class="col-time">Hora</span>
-              <span class="col-title">Título</span>
-              <span class="col-actions">Eliminar</span>
-            </div>
-            @for (r of activeReminders(); track r.id) {
-              <div class="reminder-row">
-                <span class="col-time">{{ r.hour.toString().padStart(2,'0') }}:{{ r.minute.toString().padStart(2,'0') }}</span>
-                <span class="col-title" [title]="r.title">{{ r.title }}</span>
-                <button type="button" class="col-actions delete" (click)="removeReminder(r.id)" aria-label="Eliminar recordatorio">✕</button>
-              </div>
-            }
-          </div>
-        } @else {
-          <p class="text-[11px] text-secondary flex items-center gap-1"><span>ℹ️</span>No hay recordatorios programados.</p>
-        }
-      </div>
-    } @else {
-      <p class="text-[11px] text-secondary">Activa el interruptor para configurar un recordatorio diario.</p>
-    }
-  </section>
-
-  <!-- Sección Cuenta / Sincronización -->
-  <section class="card space-y-3">
-    <div>
-      <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Cuenta y sincronización</h3>
-      <p class="text-[11px] text-secondary mt-0.5">Tus datos ya se guardan en la nube automáticamente. Conecta Google para acceder desde otro dispositivo con la misma cuenta.</p>
-    </div>
-
-    @if (auth.isAnonymous()) {
-      <div class="space-y-2">
-        <button
-          type="button"
-          class="btn btn-outline w-full justify-center"
-          [disabled]="googleLinkState() === 'linking'"
-          (click)="connectGoogle()"
-        >
+        <button type="button" class="btn btn-primary btn-block" [disabled]="googleLinkState() === 'linking'" (click)="connectGoogle()">
           {{ googleLinkState() === 'linking' ? 'Conectando…' : 'Conectar con Google' }}
         </button>
         @if (googleLinkState() === 'in-use') {
-          <p class="text-[11px]" style="color: var(--color-warning)">
-            Esa cuenta de Google ya tiene datos propios en otro dispositivo.
-          </p>
-          <button
-            type="button"
-            class="btn-secondary !h-9 w-full justify-center"
-            (click)="signInExistingGoogle()"
-          >
-            Iniciar sesión con esa cuenta (reemplaza los datos de este dispositivo)
-          </button>
-          <p class="text-[11px] text-secondary">
-            Si prefieres conservar los datos de este dispositivo, usa "Exportar" aquí e "Importar" en el otro dispositivo (o viceversa) para fusionarlos manualmente.
-          </p>
+          <div class="space-y-3 rounded-xl p-3" style="background: color-mix(in srgb, var(--color-warning) 10%, transparent); border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent)">
+            <p class="text-sm" style="color: var(--color-warning)">Esa cuenta de Google ya tiene datos guardados en otro dispositivo.</p>
+            <button type="button" class="btn btn-secondary btn-block" (click)="signInExistingGoogle()">Iniciar sesión con esa cuenta</button>
+            <p class="caption">Esto reemplaza los datos de este dispositivo por los de esa cuenta. Si prefieres conservar los de aquí, usa "Exportar" en uno e "Importar" en el otro para fusionarlos.</p>
+          </div>
         }
         @if (googleLinkState() === 'error') {
-          <p class="text-[11px] text-danger">
-            No se pudo conectar con Google. Intenta de nuevo.
-          </p>
+          <p class="text-sm text-danger">No se pudo conectar con Google. Intenta de nuevo.</p>
         }
-      </div>
-    } @else {
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 min-w-0">
+      } @else {
+        <div class="flex items-center gap-3">
           @if (auth.photoURL()) {
-            <img [src]="auth.photoURL()" class="w-8 h-8 rounded-full" alt="" />
+            <img [src]="auth.photoURL()" class="w-11 h-11 rounded-full" alt="" referrerpolicy="no-referrer" />
+          } @else {
+            <span class="avatar">{{ (auth.displayName() || auth.email() || 'C').charAt(0).toUpperCase() }}</span>
           }
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <p class="text-sm font-medium truncate" style="color: var(--color-text)">{{ auth.displayName() || auth.email() || 'Cuenta conectada' }}</p>
-            <p class="text-[11px] text-secondary truncate">{{ auth.email() }}</p>
+            <p class="caption truncate">{{ auth.email() }}</p>
           </div>
         </div>
-        <button type="button" class="btn-secondary !h-9 shrink-0" (click)="signOutAccount()">Cerrar sesión</button>
-      </div>
-    }
+        <p class="caption">Tus datos se respaldan y se sincronizan con esta cuenta.</p>
+        <button type="button" class="btn btn-outline btn-block" (click)="signOutAccount()">Cerrar sesión</button>
+      }
+    </div>
   </section>
 
-  <!-- Mantenimiento -->
-  <section class="card space-y-3">
-    <h3 class="text-sm font-semibold tracking-wide" style="color: var(--color-text)">Mantenimiento</h3>
-    <div class="grid grid-cols-1 gap-2">
-      <button (click)="exportDb()" class="btn btn-outline w-full justify-center">Exportar Base de Datos</button>
-      <button (click)="importDb()" class="btn btn-outline w-full justify-center">Importar Base de Datos</button>
+  <!-- Datos -->
+  <section class="space-y-3">
+    <h3 class="overline px-1">Datos</h3>
+    <div class="card space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <button type="button" (click)="exportDb()" class="btn btn-secondary">Exportar</button>
+        <button type="button" (click)="importDb()" class="btn btn-secondary">Importar</button>
+      </div>
+      <p class="caption">Exporta un respaldo en archivo o impórtalo. Importar reemplaza todos los datos actuales y requiere conexión.</p>
     </div>
-    <p class="text-[11px] text-muted">La importación reemplazará todos los datos actuales.</p>
+  </section>
+
+  <!-- Acerca de -->
+  <section class="space-y-3">
+    <h3 class="overline px-1">Acerca de</h3>
+    <div class="card space-y-4">
+      <div class="flex items-center gap-3">
+        <img src="icons/android/android-launchericon-96-96.png" alt="" class="w-12 h-12 rounded-xl" />
+        <div class="min-w-0">
+          <p class="text-sm font-semibold" style="color: var(--color-text)">Mi Flota</p>
+          <p class="caption">Ingresos y gastos de tus vehículos, con o sin internet.</p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" (click)="shareApp()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M12 3v12m0-12L8 7m4-4l4 4"/></svg>
+        Compartir la app
+      </button>
+    </div>
   </section>
 </div>

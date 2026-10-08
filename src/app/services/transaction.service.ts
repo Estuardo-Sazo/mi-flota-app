@@ -1,5 +1,5 @@
 import { Injectable, effect, inject, signal } from '@angular/core';
-import { Firestore, addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
+import { Firestore, addDoc, collection, deleteDoc, doc, onSnapshot, setDoc, updateDoc } from '@angular/fire/firestore';
 import { Timestamp, serverTimestamp } from 'firebase/firestore';
 import { AuthService } from './auth.service';
 import { SyncStatusService } from './sync-status.service';
@@ -61,6 +61,13 @@ export class TransactionService {
   remove(id: string) {
     const uid = this.requireUid();
     return deleteDoc(doc(this.firestore, `${transactionsPath(uid)}/${id}`));
+  }
+
+  /** Vuelve a crear un movimiento eliminado, con el mismo id (para "Deshacer"). */
+  restore(tx: Transaction) {
+    const uid = this.requireUid();
+    const { id, ...data } = tx;
+    return setDoc(doc(this.firestore, `${transactionsPath(uid)}/${id}`), data);
   }
 
   private requireUid(): string {

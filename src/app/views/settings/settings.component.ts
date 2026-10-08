@@ -12,6 +12,7 @@ import {
 import { SettingsService } from '../../services/settings.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { ToastService } from '../../services/toast.service';
 import { ThemeService, ThemePreference } from '../../services/theme.service';
 import { remindersPath, settingsDocPath, transactionsPath, vehiclesPath } from '../../services/firestore-paths';
 import { chunk } from '../../utils/chunk';
@@ -27,6 +28,7 @@ export class SettingsComponent {
   private firestore = inject(Firestore);
   private settingsService = inject(SettingsService);
   private notif = inject(NotificationService);
+  private toast = inject(ToastService);
   auth = inject(AuthService);
   theme = inject(ThemeService);
 
@@ -113,6 +115,23 @@ export class SettingsComponent {
     const hour = parseInt(hStr, 10);
     const minute = parseInt(mStr, 10);
     this.notif.scheduleDailyReminder({ hour, minute, title: this.reminderTitle, body: this.reminderBody });
+    this.toast.show(`Recordatorio programado a las ${this.reminderTime}.`);
+  }
+
+  /** Comparte el enlace de la app (hoja de compartir nativa o copia al portapapeles). */
+  async shareApp() {
+    const url = document.baseURI;
+    const data = { title: 'Mi Flota', text: 'Registra ingresos y gastos de tus vehículos, incluso sin internet.', url };
+    try {
+      if (navigator.share) {
+        await navigator.share(data);
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      this.toast.show('Enlace copiado.');
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') this.toast.show(`Comparte este enlace: ${url}`, { duration: 8000 });
+    }
   }
 
   async testNow() {
@@ -192,7 +211,7 @@ export class SettingsComponent {
       a.download = `mi-flota-backup-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      alert('Base de datos exportada exitosamente.');
+      this.toast.show('Respaldo exportado.');
     } catch (e) {
       console.error('Error al exportar la base de datos:', e);
       alert('Ocurrió un error al exportar la base de datos.');
@@ -236,7 +255,7 @@ export class SettingsComponent {
         if (data.settings) {
           await setDoc(doc(this.firestore, settingsDocPath(uid)), data.settings, { merge: true });
         }
-        alert('Importación completada.');
+        this.toast.show('Importación completada.');
       } catch (e: any) {
         console.error('Error al importar respaldo:', e);
         alert('Fallo al importar. Detalle: ' + (e?.message || e));

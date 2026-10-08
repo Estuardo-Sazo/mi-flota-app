@@ -1,58 +1,62 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TransactionService } from '../../services/transaction.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TransactionService, Transaction } from '../../services/transaction.service';
 import { VehicleService } from '../../services/vehicle.service';
 import { SettingsService } from '../../services/settings.service';
+import { BarChartComponent, ChartPoint } from '../../components/bar-chart/bar-chart.component';
 import {
   TransactionModalComponent,
   TransactionData,
 } from '../../components/transaction-modal/transaction-modal.component';
 import { queueWrite } from '../../utils/queue-write';
-import { startOfMonth, endOfMonth, format, addMonths } from 'date-fns';
+import { dayKey, dayLabel, parseTxDate, timeLabel } from '../../utils/dates';
+import { startOfMonth, endOfMonth, format, addMonths, subDays, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const DEFAULT_DESCRIPTIONS = { income: 'Viaje', expense: 'Gasolina' } as const;
+function totals(list: Transaction[]) {
+  let income = 0;
+  let expense = 0;
+  for (const t of list) {
+    if (t.type === 'income') income += t.amount;
+    else expense += t.amount;
+  }
+  return { income, expense, net: income - expense };
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TransactionModalComponent],
+  imports: [CommonModule, RouterLink, BarChartComponent, TransactionModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+  private route = inject(ActivatedRoute);
   private transactionService = inject(TransactionService);
   private vehicleService = inject(VehicleService);
   private settingsService = inject(SettingsService);
 
   transactions = this.transactionService.transactions;
+  vehiclesLoaded = this.vehicleService.loaded;
+  hasVehicles = computed(() => this.vehicleService.activeVehicles().length > 0);
+  /** Hay vehículos pero todos están desactivados. */
+  onlyInactiveVehicles = computed(() => !this.hasVehicles() && this.vehicleService.vehicles().length > 0);
+  abs = Math.abs;
   currencySymbol = computed(() => this.settingsService.settings().currencySymbol);
   selectedMonth = signal<Date>(startOfMonth(new Date()));
 
-  // Acción rápida: agregar ingreso/gasto sin ir a Flota
-  quickActionOpen = signal(false);
+  // Registro rápido
   isTransactionModalOpen = signal(false);
-  modalVehicleId = signal<string | null>(null);
-  modalVehicleAlias = signal<string | null>(null);
-  modalTransactionType = signal<'income' | 'expense' | null>(null);
-  modalDefaultDescription = signal<string | null>(null);
 
-  toggleQuickAction() {
-    if (!this.vehicleService.mostRecentVehicle()) {
-      alert('Agrega un vehículo primero desde Flota.');
-      return;
+  ngOnInit() {
+    // Atajo de la PWA: /dashboard?add=transaction abre el registro directamente.
+    if (this.route.snapshot.queryParamMap.get('add') === 'transaction' && this.hasVehicles()) {
+      this.openQuickTransaction();
     }
-    this.quickActionOpen.update((v) => !v);
   }
 
-  openQuickTransaction(type: 'income' | 'expense') {
-    const vehicle = this.vehicleService.mostRecentVehicle();
-    if (!vehicle) return;
-    this.modalVehicleId.set(vehicle.id);
-    this.modalVehicleAlias.set(vehicle.alias);
-    this.modalTransactionType.set(type);
-    this.modalDefaultDescription.set(DEFAULT_DESCRIPTIONS[type]);
-    this.quickActionOpen.set(false);
+  openQuickTransaction() {
     this.isTransactionModalOpen.set(true);
   }
 
@@ -66,67 +70,106 @@ export class DashboardComponent {
     }
   }
 
-  currentMonthTransactions = computed(() => {
-    const month = this.selectedMonth();
+  // ---- Datos del mes ----
+  private inMonth(list: Transaction[], month: Date) {
     const start = startOfMonth(month);
     const end = endOfMonth(month);
-    return this.transactions().filter((t) => {
-      const tDate = new Date(t.date);
-      return tDate >= start && tDate <= end;
+    return list.filter((t) => {
+      const d = parseTxDate(t.date);
+      return d >= start && d <= end;
     });
+  }
+
+  currentMonthTransactions = computed(() => this.inMonth(this.transactions(), this.selectedMonth()));
+  monthTotals = computed(() => totals(this.currentMonthTransactions()));
+  monthlyIncome = computed(() => this.monthTotals().income);
+  monthlyExpenses = computed(() => this.monthTotals().expense);
+  netEarnings = computed(() => this.monthTotals().net);
+
+  /** Diferencia de ganancia contra el mes anterior (null si el mes anterior no tuvo movimientos). */
+  comparison = computed(() => {
+    const prevMonth = addMonths(this.selectedMonth(), -1);
+    const prev = this.inMonth(this.transactions(), prevMonth);
+    if (prev.length === 0) return null;
+    return {
+      delta: this.netEarnings() - totals(prev).net,
+      label: format(prevMonth, 'MMMM', { locale: es }),
+    };
   });
 
-  monthlyIncome = computed(() =>
-    this.currentMonthTransactions()
-      .filter((t) => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
-  );
+  // ---- Últimos 7 días ----
+  weekChart = computed<ChartPoint[]>(() => {
+    const end = this.isCurrentMonth() ? new Date() : endOfMonth(this.selectedMonth());
+    const all = this.transactions();
+    const points: ChartPoint[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const day = subDays(end, i);
+      const key = dayKey(day);
+      const { income, expense } = totals(all.filter((t) => dayKey(parseTxDate(t.date)) === key));
+      points.push({
+        label: format(day, 'EEE', { locale: es }).replace('.', ''),
+        income,
+        expense,
+        highlight: isSameDay(day, new Date()),
+      });
+    }
+    return points;
+  });
+  weekHasData = computed(() => this.weekChart().some((p) => p.income > 0 || p.expense > 0));
 
-  monthlyExpenses = computed(() =>
-    this.currentMonthTransactions()
-      .filter((t) => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
-  );
+  // ---- Por vehículo ----
+  byVehicle = computed(() => {
+    const names = new Map(this.vehicleService.vehicles().map((v) => [v.id, v.alias]));
+    const groups = new Map<string, Transaction[]>();
+    for (const t of this.currentMonthTransactions()) {
+      const list = groups.get(t.vehicleId) ?? [];
+      list.push(t);
+      groups.set(t.vehicleId, list);
+    }
+    const rows = [...groups.entries()].map(([id, list]) => ({
+      id,
+      alias: names.get(id) ?? 'Vehículo desconocido',
+      ...totals(list),
+    }));
+    const maxIncome = Math.max(1, ...rows.map((r) => r.income));
+    return rows
+      .sort((a, b) => b.net - a.net)
+      .map((r) => ({ ...r, incomeShare: (r.income / maxIncome) * 100 }));
+  });
 
-  netEarnings = computed(() => this.monthlyIncome() - this.monthlyExpenses());
-
-  recentTransactions = computed(() =>
-    [...this.transactions()]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 10)
-  );
+  // ---- Listas ----
+  recentTransactions = computed(() => {
+    const names = new Map(this.vehicleService.vehicles().map((v) => [v.id, v.alias]));
+    return [...this.transactions()]
+      .sort((a, b) => parseTxDate(b.date).getTime() - parseTxDate(a.date).getTime())
+      .slice(0, 5)
+      .map((t) => ({ ...t, vehicleAlias: names.get(t.vehicleId) ?? 'Vehículo desconocido' }));
+  });
 
   dailySummaries = computed(() => {
-    const dailyMap = new Map<
-      string,
-      { date: Date; income: number; expense: number; balance: number }
-    >();
-
-    this.currentMonthTransactions().forEach((t) => {
-      const dateObj = new Date(t.date);
-      const dayKey = format(dateObj, 'yyyy-MM-dd'); // Group by day
-
-      if (!dailyMap.has(dayKey)) {
-        dailyMap.set(dayKey, { date: dateObj, income: 0, expense: 0, balance: 0 });
-      }
-
-      const summary = dailyMap.get(dayKey)!;
+    const map = new Map<string, { date: Date; income: number; expense: number; balance: number }>();
+    for (const t of this.currentMonthTransactions()) {
+      const d = parseTxDate(t.date);
+      const key = dayKey(d);
+      const entry = map.get(key) ?? { date: d, income: 0, expense: 0, balance: 0 };
       if (t.type === 'income') {
-        summary.income += t.amount;
-        summary.balance += t.amount;
+        entry.income += t.amount;
+        entry.balance += t.amount;
       } else {
-        summary.expense += t.amount;
-        summary.balance -= t.amount;
+        entry.expense += t.amount;
+        entry.balance -= t.amount;
       }
-    });
-
-    return Array.from(dailyMap.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+      map.set(key, entry);
+    }
+    return [...map.values()].sort((a, b) => b.date.getTime() - a.date.getTime());
   });
 
   recentDailySummaries = computed(() => this.dailySummaries().slice(0, 3));
 
-  formatDate(date: string) {
-    return new Date(date).toLocaleDateString('es-ES');
+  // ---- Formato ----
+  dayLabel = dayLabel;
+  timeLabel(date: string) {
+    return timeLabel(parseTxDate(date));
   }
 
   monthLabel() {
@@ -138,10 +181,9 @@ export class DashboardComponent {
   }
 
   nextMonth() {
-    const currentStart = startOfMonth(new Date());
     const next = startOfMonth(addMonths(this.selectedMonth(), 1));
     // Evitar avanzar más allá del mes actual
-    if (next <= currentStart) {
+    if (next <= startOfMonth(new Date())) {
       this.selectedMonth.set(next);
     }
   }
