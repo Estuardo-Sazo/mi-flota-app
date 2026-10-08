@@ -4,6 +4,7 @@ import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-
 import { TransactionService, Transaction } from '../../services/transaction.service';
 import { VehicleService } from '../../services/vehicle.service';
 import { SettingsService } from '../../services/settings.service';
+import { queueWrite } from '../../utils/queue-write';
 
 interface EnrichedTransaction extends Transaction {
   vehicleAlias?: string;
@@ -83,10 +84,10 @@ export class RecordsComponent implements OnDestroy {
     this.deletingId.set(null);
   }
 
-  async confirmDelete() {
+  confirmDelete() {
     const id = this.deletingId();
     if (id != null) {
-      await this.transactionService.remove(id);
+      queueWrite(() => this.transactionService.remove(id));
     }
     this.deletingId.set(null);
   }

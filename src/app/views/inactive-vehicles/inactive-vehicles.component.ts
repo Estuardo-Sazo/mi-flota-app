@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VehicleService } from '../../services/vehicle.service';
+import { queueWrite } from '../../utils/queue-write';
 
 @Component({
   selector: 'app-inactive-vehicles',
@@ -13,7 +14,7 @@ export class InactiveVehiclesComponent {
 
   vehicles = this.vehicleService.inactiveVehicles;
 
-  async reactivate(id: string) {
-    await this.vehicleService.setActive(id, true);
+  reactivate(id: string) {
+    queueWrite(() => this.vehicleService.setActive(id, true));
   }
 }

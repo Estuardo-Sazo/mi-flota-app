@@ -7,6 +7,7 @@ import {
   TransactionModalComponent,
   TransactionData,
 } from '../../components/transaction-modal/transaction-modal.component';
+import { queueWrite } from '../../utils/queue-write';
 import { startOfMonth, endOfMonth, format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -59,9 +60,10 @@ export class DashboardComponent {
     this.isTransactionModalOpen.set(false);
   }
 
-  async saveTransaction(data: TransactionData) {
-    await this.transactionService.add(data);
-    this.closeTransactionModal();
+  saveTransaction(data: TransactionData) {
+    if (queueWrite(() => this.transactionService.add(data))) {
+      this.closeTransactionModal();
+    }
   }
 
   currentMonthTransactions = computed(() => {
