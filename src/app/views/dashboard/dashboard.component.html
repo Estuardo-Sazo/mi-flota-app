@@ -9,7 +9,7 @@
   <!-- Primer uso -->
   <section class="card space-y-5">
     <div>
-      <p class="overline">Bienvenido a Mi flota</p>
+      <p class="eyebrow">Bienvenido a Mi flota</p>
       <h2 class="text-xl font-semibold tracking-tight mt-1" style="color: var(--color-text)">
         {{ onlyInactiveVehicles() ? 'No tienes vehículos activos' : 'Empecemos por tu primer vehículo' }}
       </h2>
@@ -46,7 +46,7 @@
     <!-- Ganancia neta -->
     <section class="card">
       <div class="flex items-start justify-between gap-3">
-        <p class="overline">Ganancia neta</p>
+        <p class="eyebrow">Ganancia neta</p>
         @if (comparison(); as c) {
           <span class="badge" [class.badge-green]="c.delta >= 0" [class.badge-red]="c.delta < 0">
             {{ c.delta >= 0 ? '▲' : '▼' }} {{ currencySymbol() }}{{ abs(c.delta) | number : '1.2-2' }} vs {{ c.label }}

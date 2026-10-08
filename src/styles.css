@@ -99,6 +99,10 @@ html, body {
 	font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-webkit-tap-highlight-color: transparent;
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	/* Evita el zoom accidental por doble toque en iOS, pero mantiene el zoom con pellizco (accesibilidad) */
+	touch-action: manipulation;
 	transition: background-color .2s ease, color .2s ease;
 }
 
@@ -111,7 +115,7 @@ html, body {
 .title-sm { color: var(--color-text-secondary); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
 .t-hero { font-size: 2.25rem; line-height: 1.05; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
 .t-amount { font-variant-numeric: tabular-nums; }
-.overline { color: var(--color-text-secondary); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
+.eyebrow { color: var(--color-text-secondary); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; }
 .caption { color: var(--color-text-secondary); font-size: .8125rem; line-height: 1.35; }
 .section-title { color: var(--color-text); font-size: 1rem; font-weight: 600; letter-spacing: -0.005em; }
 
